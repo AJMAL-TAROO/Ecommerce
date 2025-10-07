@@ -2,6 +2,7 @@
 class EcommerceApp {
   constructor() {
     this.products = [];
+    this.categories = [];
     this.cart = this.loadCart();
     this.currentCategory = 'All';
     this.currentProduct = null;
@@ -41,6 +42,11 @@ class EcommerceApp {
   renderCategories() {
     const categoriesContainer = document.getElementById('categories');
     if (!categoriesContainer) return;
+
+    if (!this.categories || this.categories.length === 0) {
+      categoriesContainer.innerHTML = '';
+      return;
+    }
 
     categoriesContainer.innerHTML = this.categories.map(category => `
       <button class="btn btn-sm ${category === this.currentCategory ? 'btn-primary' : 'btn-ghost'}" 
