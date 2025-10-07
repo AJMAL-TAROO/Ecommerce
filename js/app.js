@@ -19,13 +19,159 @@ class EcommerceApp {
 
   async loadProducts() {
     try {
+      // Try to fetch from JSON file first (for HTTP server deployment)
       const response = await fetch('./data/products.json');
       const data = await response.json();
       this.products = data.products;
       this.categories = data.categories;
     } catch (error) {
-      console.error('Error loading products:', error);
-      this.showNotification('Error loading products', 'error');
+      // Fallback to embedded data if fetch fails (for file:// protocol)
+      console.log('Loading products from embedded data');
+      const embeddedData = {
+        "products": [
+          {
+            "id": 1,
+            "name": "Wireless Headphones",
+            "category": "Electronics",
+            "price": 79.99,
+            "description": "Premium wireless headphones with noise cancellation and 30-hour battery life",
+            "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.5,
+            "reviews": 128
+          },
+          {
+            "id": 2,
+            "name": "Smart Watch",
+            "category": "Electronics",
+            "price": 199.99,
+            "description": "Fitness tracking smartwatch with heart rate monitor and GPS",
+            "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.7,
+            "reviews": 256
+          },
+          {
+            "id": 3,
+            "name": "Laptop Backpack",
+            "category": "Accessories",
+            "price": 49.99,
+            "description": "Durable laptop backpack with multiple compartments and USB charging port",
+            "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.3,
+            "reviews": 89
+          },
+          {
+            "id": 4,
+            "name": "Mechanical Keyboard",
+            "category": "Electronics",
+            "price": 129.99,
+            "description": "RGB mechanical keyboard with cherry switches for gaming and typing",
+            "image": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.8,
+            "reviews": 342
+          },
+          {
+            "id": 5,
+            "name": "Running Shoes",
+            "category": "Sports",
+            "price": 89.99,
+            "description": "Comfortable running shoes with excellent cushioning and support",
+            "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.6,
+            "reviews": 203
+          },
+          {
+            "id": 6,
+            "name": "Coffee Maker",
+            "category": "Home",
+            "price": 69.99,
+            "description": "Programmable coffee maker with thermal carafe and brew strength control",
+            "image": "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.4,
+            "reviews": 167
+          },
+          {
+            "id": 7,
+            "name": "Yoga Mat",
+            "category": "Sports",
+            "price": 34.99,
+            "description": "Non-slip yoga mat with extra cushioning for comfortable practice",
+            "image": "https://images.unsplash.com/photo-1592432678016-e910b452f9a2?w=500&h=500&fit=crop",
+            "inStock": false,
+            "rating": 4.5,
+            "reviews": 145
+          },
+          {
+            "id": 8,
+            "name": "Desk Lamp",
+            "category": "Home",
+            "price": 39.99,
+            "description": "LED desk lamp with adjustable brightness and color temperature",
+            "image": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.2,
+            "reviews": 98
+          },
+          {
+            "id": 9,
+            "name": "Wireless Mouse",
+            "category": "Electronics",
+            "price": 29.99,
+            "description": "Ergonomic wireless mouse with precision tracking and long battery life",
+            "image": "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.6,
+            "reviews": 287
+          },
+          {
+            "id": 10,
+            "name": "Water Bottle",
+            "category": "Sports",
+            "price": 24.99,
+            "description": "Insulated stainless steel water bottle keeps drinks cold for 24 hours",
+            "image": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.7,
+            "reviews": 412
+          },
+          {
+            "id": 11,
+            "name": "Bluetooth Speaker",
+            "category": "Electronics",
+            "price": 59.99,
+            "description": "Portable Bluetooth speaker with 360-degree sound and waterproof design",
+            "image": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.5,
+            "reviews": 234
+          },
+          {
+            "id": 12,
+            "name": "Sunglasses",
+            "category": "Accessories",
+            "price": 79.99,
+            "description": "Polarized sunglasses with UV protection and stylish design",
+            "image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&h=500&fit=crop",
+            "inStock": true,
+            "rating": 4.4,
+            "reviews": 176
+          }
+        ],
+        "categories": [
+          "All",
+          "Electronics",
+          "Accessories",
+          "Sports",
+          "Home"
+        ]
+      };
+      this.products = embeddedData.products;
+      this.categories = embeddedData.categories;
     }
   }
 
