@@ -236,7 +236,7 @@ class EcommerceApp {
           </h2>
           <p class="text-sm text-gray-600 line-clamp-2">${product.description}</p>
           <div class="card-actions justify-between items-center mt-4">
-            <span class="text-2xl font-bold text-primary">$${product.price.toFixed(2)}</span>
+            <span class="text-2xl font-bold text-primary">₨${product.price.toFixed(2)}</span>
             <div class="flex gap-2">
               <button class="btn btn-sm btn-outline" onclick="app.showProductDetail(${product.id})">
                 Details
@@ -270,7 +270,7 @@ class EcommerceApp {
           <h3 class="text-3xl font-bold mb-4">${product.name}</h3>
           <div class="badge badge-secondary mb-4">${product.category}</div>
           <p class="text-gray-600 mb-6">${product.description}</p>
-          <div class="text-4xl font-bold text-primary mb-6">$${product.price.toFixed(2)}</div>
+          <div class="text-4xl font-bold text-primary mb-6">₨${product.price.toFixed(2)}</div>
           <div class="flex gap-4">
             ${product.inStock ? `
               <button class="btn btn-primary btn-lg flex-1" onclick="app.addToCart(${product.id}); app.closeModal()">
@@ -372,7 +372,7 @@ class EcommerceApp {
           <p class="text-xl text-gray-500">Your cart is empty</p>
         </div>
       `;
-      cartTotal.textContent = '$0.00';
+      cartTotal.textContent = '₨0.00';
       return;
     }
 
@@ -381,7 +381,7 @@ class EcommerceApp {
         <img src="${item.image}" alt="${item.name}" class="w-20 h-20 object-cover rounded" />
         <div class="flex-1">
           <h4 class="font-semibold">${item.name}</h4>
-          <p class="text-sm text-gray-600">$${item.price.toFixed(2)}</p>
+          <p class="text-sm text-gray-600">₨${item.price.toFixed(2)}</p>
           <div class="flex items-center gap-2 mt-2">
             <button class="btn btn-xs" onclick="app.updateQuantity(${item.id}, -1)">-</button>
             <span class="px-3">${item.quantity}</span>
@@ -389,7 +389,7 @@ class EcommerceApp {
           </div>
         </div>
         <div class="text-right">
-          <p class="font-bold">$${(item.price * item.quantity).toFixed(2)}</p>
+          <p class="font-bold">₨${(item.price * item.quantity).toFixed(2)}</p>
           <button class="btn btn-sm btn-error btn-outline mt-2" onclick="app.removeFromCart(${item.id})">
             Remove
           </button>
@@ -398,7 +398,7 @@ class EcommerceApp {
     `).join('');
 
     const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    cartTotal.textContent = `$${total.toFixed(2)}`;
+    cartTotal.textContent = `₨${total.toFixed(2)}`;
   }
 
   checkout() {
@@ -420,7 +420,7 @@ class EcommerceApp {
     const totalEl = document.getElementById('checkout-total');
     
     if (itemsCountEl) itemsCountEl.textContent = itemCount;
-    if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
+    if (totalEl) totalEl.textContent = `₨${total.toFixed(2)}`;
     
     modal.classList.add('modal-open');
     
@@ -477,7 +477,7 @@ class EcommerceApp {
 
   showNotification(message, type = 'info') {
     const notification = document.createElement('div');
-    notification.className = `alert alert-${type} shadow-lg fixed top-4 right-4 w-96 z-50 animate-fade-in`;
+    notification.className = `alert alert-${type} shadow-lg fixed bottom-4 left-1/2 transform -translate-x-1/2 w-96 z-50 animate-fade-in`;
     notification.innerHTML = `
       <div>
         <span>${message}</span>
@@ -634,10 +634,10 @@ class EcommerceApp {
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm opacity-80">Avg. Price</p>
-              <h3 class="text-4xl font-bold mt-2">$${stats.averagePrice.toFixed(0)}</h3>
+              <h3 class="text-4xl font-bold mt-2">₨${stats.averagePrice.toFixed(0)}</h3>
             </div>
             <div class="text-5xl opacity-80">
-              <i class="fas fa-dollar-sign"></i>
+              <i class="fas fa-rupee-sign"></i>
             </div>
           </div>
         </div>
@@ -709,7 +709,7 @@ class EcommerceApp {
                         <span class="badge badge-error">${catStats.outOfStock}</span>
                       </td>
                       <td class="text-right font-bold text-primary">
-                        $${catStats.totalValue.toFixed(2)}
+                        ₨${catStats.totalValue.toFixed(2)}
                       </td>
                     </tr>
                   `;
@@ -728,7 +728,7 @@ class EcommerceApp {
                     <span class="badge badge-error badge-lg">${stats.outOfStockCount}</span>
                   </td>
                   <td class="text-right text-primary text-lg">
-                    $${stats.totalValue.toFixed(2)}
+                    ₨${stats.totalValue.toFixed(2)}
                   </td>
                 </tr>
               </tfoot>
@@ -746,7 +746,7 @@ class EcommerceApp {
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="bg-base-100 rounded-lg p-4 border-l-4 border-primary">
             <p class="text-sm text-gray-600">Total Inventory Value</p>
-            <p class="text-2xl font-bold text-primary">$${stats.totalValue.toFixed(2)}</p>
+            <p class="text-2xl font-bold text-primary">₨${stats.totalValue.toFixed(2)}</p>
           </div>
           <div class="bg-base-100 rounded-lg p-4 border-l-4 border-success">
             <p class="text-sm text-gray-600">Stock Availability</p>
