@@ -5,6 +5,7 @@ class EcommerceApp {
     this.categories = [];
     this.cart = this.loadCart();
     this.currentCategory = 'All';
+    this.searchTerm = '';
     this.currentProduct = null;
     this.init();
   }
@@ -208,11 +209,28 @@ class EcommerceApp {
     this.renderProducts();
   }
 
+  searchProducts(searchTerm) {
+    this.searchTerm = searchTerm;
+    this.renderProducts();
+  }
+
   getFilteredProducts() {
-    if (this.currentCategory === 'All') {
-      return this.products;
+    let filtered = this.products;
+    
+    // Filter by category
+    if (this.currentCategory !== 'All') {
+      filtered = filtered.filter(p => p.category === this.currentCategory);
     }
-    return this.products.filter(p => p.category === this.currentCategory);
+    
+    // Filter by search term
+    if (this.searchTerm) {
+      const searchLower = this.searchTerm.toLowerCase();
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(searchLower)
+      );
+    }
+    
+    return filtered;
   }
 
   renderProducts() {
@@ -473,6 +491,14 @@ class EcommerceApp {
   }
 
   setupEventListeners() {
+    // Search input listener
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.searchProducts(e.target.value);
+      });
+    }
+
     window.addEventListener('click', (e) => {
       if (e.target.id === 'product-modal') {
         this.closeModal();
