@@ -465,12 +465,69 @@ class EcommerceApp {
     const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const itemCount = this.cart.reduce((sum, item) => sum + item.quantity, 0);
 
-    if (confirm(`Proceed to checkout?\n\nItems: ${itemCount}\nTotal: $${total.toFixed(2)}`)) {
-      this.cart = [];
-      this.saveCart();
-      this.toggleCart();
-      this.showNotification('Order placed successfully! Thank you for your purchase.', 'success');
+    // Show checkout modal
+    this.showCheckoutModal(itemCount, total);
+  }
+
+  showCheckoutModal(itemCount, total) {
+    const modal = document.getElementById('checkout-modal');
+    const itemsCountEl = document.getElementById('checkout-items-count');
+    const totalEl = document.getElementById('checkout-total');
+    
+    if (itemsCountEl) itemsCountEl.textContent = itemCount;
+    if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
+    
+    modal.classList.add('modal-open');
+    
+    // Setup form submission handler
+    const form = document.getElementById('checkout-form');
+    if (form) {
+      form.onsubmit = (e) => this.handleCheckoutSubmit(e);
     }
+  }
+
+  closeCheckoutModal() {
+    const modal = document.getElementById('checkout-modal');
+    modal.classList.remove('modal-open');
+    
+    // Reset form
+    const form = document.getElementById('checkout-form');
+    if (form) form.reset();
+  }
+
+  handleCheckoutSubmit(e) {
+    e.preventDefault();
+    
+    // Get form values
+    const screenshot = document.getElementById('payment-screenshot').files[0];
+    const name = document.getElementById('customer-name').value.trim();
+    const phone = document.getElementById('customer-phone').value.trim();
+    const address = document.getElementById('customer-address').value.trim();
+    
+    // Validate all fields are filled
+    if (!screenshot || !name || !phone || !address) {
+      this.showNotification('Please fill in all required fields', 'error');
+      return;
+    }
+    
+    // In a real application, you would upload the screenshot and send the order data to a server
+    // For now, we'll simulate a successful order
+    console.log('Order Details:', {
+      screenshot: screenshot.name,
+      name,
+      phone,
+      address,
+      cart: this.cart,
+      total: this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    });
+    
+    // Clear cart and close modals
+    this.cart = [];
+    this.saveCart();
+    this.closeCheckoutModal();
+    this.toggleCart();
+    
+    this.showNotification('Order placed successfully! We will contact you shortly for delivery.', 'success');
   }
 
   showNotification(message, type = 'info') {
@@ -503,11 +560,15 @@ class EcommerceApp {
       if (e.target.id === 'product-modal') {
         this.closeModal();
       }
+      if (e.target.id === 'checkout-modal') {
+        this.closeCheckoutModal();
+      }
     });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeModal();
+        this.closeCheckoutModal();
         const cartDrawer = document.getElementById('cart-drawer');
         if (!cartDrawer.classList.contains('translate-x-full')) {
           this.toggleCart();
