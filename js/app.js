@@ -477,7 +477,8 @@ class EcommerceApp {
 
   showNotification(message, type = 'info') {
     const notification = document.createElement('div');
-    notification.className = `alert alert-${type} shadow-lg fixed bottom-4 left-1/2 transform -translate-x-1/2 w-96 z-50 animate-fade-in`;
+    notification.className = `alert alert-${type} shadow-lg fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in`;
+    notification.style.width = '70%';
     notification.innerHTML = `
       <div>
         <span>${message}</span>
