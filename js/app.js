@@ -593,6 +593,14 @@ class EcommerceApp {
     const maxCategoryCount = Math.max(...Object.values(stats.categoryStats).map(c => c.count));
 
     dashboardContent.innerHTML = `
+      <!-- Tab Navigation -->
+      <div role="tablist" class="tabs tabs-boxed mb-6">
+        <a role="tab" class="tab tab-active" onclick="app.switchDashboardTab('stats')">Statistics</a>
+        <a role="tab" class="tab" onclick="app.switchDashboardTab('products')">Product Management</a>
+      </div>
+
+      <!-- Statistics Tab -->
+      <div id="stats-tab" class="dashboard-tab">
       <!-- Summary Stats Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-6">
@@ -759,7 +767,253 @@ class EcommerceApp {
           </div>
         </div>
       </div>
+      </div>
+
+      <!-- Product Management Tab -->
+      <div id="products-tab" class="dashboard-tab hidden">
+        <div class="mb-6 flex justify-between items-center">
+          <h4 class="text-2xl font-bold">Product Management</h4>
+          <button class="btn btn-primary" onclick="app.showAddProductForm()">
+            <i class="fas fa-plus mr-2"></i>
+            Add New Product
+          </button>
+        </div>
+
+        <!-- Add/Edit Product Form -->
+        <div id="product-form-container" class="hidden mb-6">
+          <div class="bg-base-100 rounded-lg shadow-lg p-6">
+            <h5 class="text-xl font-bold mb-4" id="form-title">Add New Product</h5>
+            <form id="product-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="hidden" id="product-id" />
+              
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Product Name *</span>
+                </label>
+                <input type="text" id="product-name" class="input input-bordered" required />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Category *</span>
+                </label>
+                <select id="product-category" class="select select-bordered" required>
+                  <option value="">Select Category</option>
+                  ${this.categories.filter(cat => cat !== 'All').map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+                </select>
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Price (₨) *</span>
+                </label>
+                <input type="number" id="product-price" class="input input-bordered" step="0.01" min="0" required />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">In Stock</span>
+                </label>
+                <input type="checkbox" id="product-instock" class="checkbox checkbox-primary" checked />
+              </div>
+
+              <div class="form-control md:col-span-2">
+                <label class="label">
+                  <span class="label-text font-semibold">Description *</span>
+                </label>
+                <textarea id="product-description" class="textarea textarea-bordered h-24" required></textarea>
+              </div>
+
+              <div class="form-control md:col-span-2">
+                <label class="label">
+                  <span class="label-text font-semibold">Image URL *</span>
+                </label>
+                <input type="url" id="product-image" class="input input-bordered" required />
+              </div>
+
+              <div class="md:col-span-2 flex gap-2 justify-end">
+                <button type="button" class="btn btn-outline" onclick="app.cancelProductForm()">Cancel</button>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-save mr-2"></i>
+                  Save Product
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Products List -->
+        <div class="bg-base-100 rounded-lg shadow-lg p-6">
+          <h5 class="text-xl font-bold mb-4">All Products</h5>
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${this.products.map(product => `
+                  <tr>
+                    <td>${product.id}</td>
+                    <td>
+                      <div class="flex items-center gap-3">
+                        <div class="avatar">
+                          <div class="w-12 h-12 rounded">
+                            <img src="${product.image}" alt="${product.name}" />
+                          </div>
+                        </div>
+                        <div class="font-semibold">${product.name}</div>
+                      </div>
+                    </td>
+                    <td><span class="badge badge-primary">${product.category}</span></td>
+                    <td class="font-bold">₨${product.price.toFixed(2)}</td>
+                    <td>
+                      ${product.inStock ? 
+                        '<span class="badge badge-success">In Stock</span>' : 
+                        '<span class="badge badge-error">Out of Stock</span>'}
+                    </td>
+                    <td>
+                      <div class="flex gap-2">
+                        <button class="btn btn-sm btn-info" onclick="app.viewProduct(${product.id})">
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="app.editProduct(${product.id})">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-error" onclick="app.deleteProduct(${product.id})">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     `;
+  }
+
+  switchDashboardTab(tabName) {
+    const statsTab = document.getElementById('stats-tab');
+    const productsTab = document.getElementById('products-tab');
+    const tabs = document.querySelectorAll('#dashboard-content .tab');
+    
+    tabs.forEach(tab => tab.classList.remove('tab-active'));
+    
+    if (tabName === 'stats') {
+      statsTab.classList.remove('hidden');
+      productsTab.classList.add('hidden');
+      tabs[0].classList.add('tab-active');
+    } else {
+      statsTab.classList.add('hidden');
+      productsTab.classList.remove('hidden');
+      tabs[1].classList.add('tab-active');
+    }
+  }
+
+  showAddProductForm() {
+    const formContainer = document.getElementById('product-form-container');
+    const formTitle = document.getElementById('form-title');
+    const form = document.getElementById('product-form');
+    
+    formTitle.textContent = 'Add New Product';
+    form.reset();
+    document.getElementById('product-id').value = '';
+    document.getElementById('product-instock').checked = true;
+    formContainer.classList.remove('hidden');
+    formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    form.onsubmit = (e) => this.handleProductFormSubmit(e);
+  }
+
+  cancelProductForm() {
+    const formContainer = document.getElementById('product-form-container');
+    formContainer.classList.add('hidden');
+    document.getElementById('product-form').reset();
+  }
+
+  handleProductFormSubmit(e) {
+    e.preventDefault();
+    
+    const productId = document.getElementById('product-id').value;
+    const productData = {
+      name: document.getElementById('product-name').value.trim(),
+      category: document.getElementById('product-category').value,
+      price: parseFloat(document.getElementById('product-price').value),
+      description: document.getElementById('product-description').value.trim(),
+      image: document.getElementById('product-image').value.trim(),
+      inStock: document.getElementById('product-instock').checked
+    };
+    
+    if (productId) {
+      // Update existing product
+      const product = this.products.find(p => p.id === parseInt(productId));
+      if (product) {
+        Object.assign(product, productData);
+        this.showNotification('Product updated successfully!', 'success');
+      }
+    } else {
+      // Add new product
+      const newId = Math.max(...this.products.map(p => p.id), 0) + 1;
+      this.products.push({
+        id: newId,
+        ...productData
+      });
+      this.showNotification('Product added successfully!', 'success');
+    }
+    
+    this.cancelProductForm();
+    this.renderDashboard();
+    this.renderProducts();
+    this.renderCategories();
+  }
+
+  viewProduct(productId) {
+    this.showProductDetail(productId);
+  }
+
+  editProduct(productId) {
+    const product = this.products.find(p => p.id === productId);
+    if (!product) return;
+    
+    const formContainer = document.getElementById('product-form-container');
+    const formTitle = document.getElementById('form-title');
+    const form = document.getElementById('product-form');
+    
+    formTitle.textContent = 'Edit Product';
+    document.getElementById('product-id').value = product.id;
+    document.getElementById('product-name').value = product.name;
+    document.getElementById('product-category').value = product.category;
+    document.getElementById('product-price').value = product.price;
+    document.getElementById('product-description').value = product.description;
+    document.getElementById('product-image').value = product.image;
+    document.getElementById('product-instock').checked = product.inStock;
+    
+    formContainer.classList.remove('hidden');
+    formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    
+    form.onsubmit = (e) => this.handleProductFormSubmit(e);
+  }
+
+  deleteProduct(productId) {
+    const product = this.products.find(p => p.id === productId);
+    if (!product) return;
+    
+    if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
+      this.products = this.products.filter(p => p.id !== productId);
+      this.showNotification('Product deleted successfully!', 'info');
+      this.renderDashboard();
+      this.renderProducts();
+      this.renderCategories();
+    }
   }
 }
 
