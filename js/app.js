@@ -508,18 +508,257 @@ class EcommerceApp {
       if (e.target.id === 'checkout-modal') {
         this.closeCheckoutModal();
       }
+      if (e.target.id === 'admin-dashboard-modal') {
+        this.closeAdminDashboard();
+      }
     });
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
         this.closeModal();
         this.closeCheckoutModal();
+        this.closeAdminDashboard();
         const cartDrawer = document.getElementById('cart-drawer');
         if (!cartDrawer.classList.contains('translate-x-full')) {
           this.toggleCart();
         }
       }
     });
+  }
+
+  // Admin Dashboard Methods
+  openAdminDashboard() {
+    const modal = document.getElementById('admin-dashboard-modal');
+    this.renderDashboard();
+    modal.classList.add('modal-open');
+  }
+
+  closeAdminDashboard() {
+    const modal = document.getElementById('admin-dashboard-modal');
+    modal.classList.remove('modal-open');
+  }
+
+  getDashboardStats() {
+    const stats = {
+      totalProducts: this.products.length,
+      totalValue: 0,
+      inStockCount: 0,
+      outOfStockCount: 0,
+      categoryStats: {},
+      averagePrice: 0
+    };
+
+    // Calculate statistics
+    this.products.forEach(product => {
+      stats.totalValue += product.price;
+      
+      if (product.inStock) {
+        stats.inStockCount++;
+      } else {
+        stats.outOfStockCount++;
+      }
+
+      // Category statistics
+      if (!stats.categoryStats[product.category]) {
+        stats.categoryStats[product.category] = {
+          count: 0,
+          totalValue: 0,
+          inStock: 0,
+          outOfStock: 0
+        };
+      }
+      
+      stats.categoryStats[product.category].count++;
+      stats.categoryStats[product.category].totalValue += product.price;
+      
+      if (product.inStock) {
+        stats.categoryStats[product.category].inStock++;
+      } else {
+        stats.categoryStats[product.category].outOfStock++;
+      }
+    });
+
+    stats.averagePrice = stats.totalProducts > 0 ? stats.totalValue / stats.totalProducts : 0;
+
+    return stats;
+  }
+
+  renderDashboard() {
+    const dashboardContent = document.getElementById('dashboard-content');
+    if (!dashboardContent) return;
+
+    const stats = this.getDashboardStats();
+    const categories = Object.keys(stats.categoryStats);
+    const maxCategoryCount = Math.max(...Object.values(stats.categoryStats).map(c => c.count));
+
+    dashboardContent.innerHTML = `
+      <!-- Summary Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm opacity-80">Total Products</p>
+              <h3 class="text-4xl font-bold mt-2">${stats.totalProducts}</h3>
+            </div>
+            <div class="text-5xl opacity-80">
+              <i class="fas fa-box"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow-lg p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm opacity-80">In Stock</p>
+              <h3 class="text-4xl font-bold mt-2">${stats.inStockCount}</h3>
+            </div>
+            <div class="text-5xl opacity-80">
+              <i class="fas fa-check-circle"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg shadow-lg p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm opacity-80">Out of Stock</p>
+              <h3 class="text-4xl font-bold mt-2">${stats.outOfStockCount}</h3>
+            </div>
+            <div class="text-5xl opacity-80">
+              <i class="fas fa-times-circle"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow-lg p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm opacity-80">Avg. Price</p>
+              <h3 class="text-4xl font-bold mt-2">$${stats.averagePrice.toFixed(0)}</h3>
+            </div>
+            <div class="text-5xl opacity-80">
+              <i class="fas fa-dollar-sign"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Breakdown -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Products per Category -->
+        <div class="bg-base-100 rounded-lg shadow-lg p-6">
+          <h4 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-chart-bar mr-3 text-primary"></i>
+            Products per Category
+          </h4>
+          <div class="space-y-4">
+            ${categories.map(category => {
+              const catStats = stats.categoryStats[category];
+              const percentage = (catStats.count / stats.totalProducts * 100).toFixed(1);
+              const barWidth = (catStats.count / maxCategoryCount * 100).toFixed(1);
+              
+              return `
+                <div class="space-y-2">
+                  <div class="flex justify-between items-center">
+                    <span class="font-semibold text-lg">${category}</span>
+                    <span class="badge badge-primary badge-lg">${catStats.count} items</span>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="flex-1 bg-base-300 rounded-full h-4 overflow-hidden">
+                      <div class="category-bar bg-gradient-to-r from-primary to-secondary h-full rounded-full" 
+                           style="width: ${barWidth}%"></div>
+                    </div>
+                    <span class="text-sm font-semibold w-12">${percentage}%</span>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+
+        <!-- Category Details Table -->
+        <div class="bg-base-100 rounded-lg shadow-lg p-6">
+          <h4 class="text-2xl font-bold mb-6 flex items-center">
+            <i class="fas fa-list mr-3 text-primary"></i>
+            Category Details
+          </h4>
+          <div class="overflow-x-auto">
+            <table class="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th>Category</th>
+                  <th class="text-center">Total</th>
+                  <th class="text-center">In Stock</th>
+                  <th class="text-center">Out</th>
+                  <th class="text-right">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${categories.map(category => {
+                  const catStats = stats.categoryStats[category];
+                  return `
+                    <tr>
+                      <td class="font-semibold">${category}</td>
+                      <td class="text-center">
+                        <span class="badge badge-neutral">${catStats.count}</span>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge badge-success">${catStats.inStock}</span>
+                      </td>
+                      <td class="text-center">
+                        <span class="badge badge-error">${catStats.outOfStock}</span>
+                      </td>
+                      <td class="text-right font-bold text-primary">
+                        $${catStats.totalValue.toFixed(2)}
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+              <tfoot>
+                <tr class="font-bold">
+                  <td>Total</td>
+                  <td class="text-center">
+                    <span class="badge badge-primary badge-lg">${stats.totalProducts}</span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge badge-success badge-lg">${stats.inStockCount}</span>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge badge-error badge-lg">${stats.outOfStockCount}</span>
+                  </td>
+                  <td class="text-right text-primary text-lg">
+                    $${stats.totalValue.toFixed(2)}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Insights -->
+      <div class="bg-gradient-to-br from-base-100 to-base-200 rounded-lg shadow-lg p-6 mt-6">
+        <h4 class="text-2xl font-bold mb-4 flex items-center">
+          <i class="fas fa-lightbulb mr-3 text-warning"></i>
+          Quick Insights
+        </h4>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-base-100 rounded-lg p-4 border-l-4 border-primary">
+            <p class="text-sm text-gray-600">Total Inventory Value</p>
+            <p class="text-2xl font-bold text-primary">$${stats.totalValue.toFixed(2)}</p>
+          </div>
+          <div class="bg-base-100 rounded-lg p-4 border-l-4 border-success">
+            <p class="text-sm text-gray-600">Stock Availability</p>
+            <p class="text-2xl font-bold text-success">${((stats.inStockCount / stats.totalProducts) * 100).toFixed(1)}%</p>
+          </div>
+          <div class="bg-base-100 rounded-lg p-4 border-l-4 border-warning">
+            <p class="text-sm text-gray-600">Categories</p>
+            <p class="text-2xl font-bold text-warning">${categories.length}</p>
+          </div>
+        </div>
+      </div>
+    `;
   }
 }
 
