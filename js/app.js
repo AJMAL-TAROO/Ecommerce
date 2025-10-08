@@ -37,9 +37,7 @@ class EcommerceApp {
             "price": 79.99,
             "description": "Premium wireless headphones with noise cancellation and 30-hour battery life",
             "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.5,
-            "reviews": 128
+            "inStock": true
           },
           {
             "id": 2,
@@ -48,9 +46,7 @@ class EcommerceApp {
             "price": 199.99,
             "description": "Fitness tracking smartwatch with heart rate monitor and GPS",
             "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.7,
-            "reviews": 256
+            "inStock": true
           },
           {
             "id": 3,
@@ -59,9 +55,7 @@ class EcommerceApp {
             "price": 49.99,
             "description": "Durable laptop backpack with multiple compartments and USB charging port",
             "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.3,
-            "reviews": 89
+            "inStock": true
           },
           {
             "id": 4,
@@ -70,9 +64,7 @@ class EcommerceApp {
             "price": 129.99,
             "description": "RGB mechanical keyboard with cherry switches for gaming and typing",
             "image": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.8,
-            "reviews": 342
+            "inStock": true
           },
           {
             "id": 5,
@@ -81,9 +73,7 @@ class EcommerceApp {
             "price": 89.99,
             "description": "Comfortable running shoes with excellent cushioning and support",
             "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.6,
-            "reviews": 203
+            "inStock": true
           },
           {
             "id": 6,
@@ -92,9 +82,7 @@ class EcommerceApp {
             "price": 69.99,
             "description": "Programmable coffee maker with thermal carafe and brew strength control",
             "image": "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.4,
-            "reviews": 167
+            "inStock": true
           },
           {
             "id": 7,
@@ -103,9 +91,7 @@ class EcommerceApp {
             "price": 34.99,
             "description": "Non-slip yoga mat with extra cushioning for comfortable practice",
             "image": "https://images.unsplash.com/photo-1592432678016-e910b452f9a2?w=500&h=500&fit=crop",
-            "inStock": false,
-            "rating": 4.5,
-            "reviews": 145
+            "inStock": false
           },
           {
             "id": 8,
@@ -114,9 +100,7 @@ class EcommerceApp {
             "price": 39.99,
             "description": "LED desk lamp with adjustable brightness and color temperature",
             "image": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.2,
-            "reviews": 98
+            "inStock": true
           },
           {
             "id": 9,
@@ -125,9 +109,7 @@ class EcommerceApp {
             "price": 29.99,
             "description": "Ergonomic wireless mouse with precision tracking and long battery life",
             "image": "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.6,
-            "reviews": 287
+            "inStock": true
           },
           {
             "id": 10,
@@ -136,9 +118,7 @@ class EcommerceApp {
             "price": 24.99,
             "description": "Insulated stainless steel water bottle keeps drinks cold for 24 hours",
             "image": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.7,
-            "reviews": 412
+            "inStock": true
           },
           {
             "id": 11,
@@ -147,9 +127,7 @@ class EcommerceApp {
             "price": 59.99,
             "description": "Portable Bluetooth speaker with 360-degree sound and waterproof design",
             "image": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.5,
-            "reviews": 234
+            "inStock": true
           },
           {
             "id": 12,
@@ -158,9 +136,7 @@ class EcommerceApp {
             "price": 79.99,
             "description": "Polarized sunglasses with UV protection and stylish design",
             "image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&h=500&fit=crop",
-            "inStock": true,
-            "rating": 4.4,
-            "reviews": 176
+            "inStock": true
           }
         ],
         "categories": [
@@ -259,12 +235,6 @@ class EcommerceApp {
             ${!product.inStock ? '<div class="badge badge-error">Out of Stock</div>' : ''}
           </h2>
           <p class="text-sm text-gray-600 line-clamp-2">${product.description}</p>
-          <div class="flex items-center gap-2 text-sm">
-            <div class="rating rating-sm">
-              ${this.renderStars(product.rating)}
-            </div>
-            <span class="text-gray-500">(${product.reviews})</span>
-          </div>
           <div class="card-actions justify-between items-center mt-4">
             <span class="text-2xl font-bold text-primary">$${product.price.toFixed(2)}</span>
             <div class="flex gap-2">
@@ -283,25 +253,6 @@ class EcommerceApp {
     `).join('');
   }
 
-  renderStars(rating) {
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 >= 0.5;
-    let stars = '';
-    
-    for (let i = 0; i < fullStars; i++) {
-      stars += '<input type="radio" class="mask mask-star-2 bg-orange-400" checked disabled />';
-    }
-    if (hasHalfStar) {
-      stars += '<input type="radio" class="mask mask-star-2 bg-orange-400" checked disabled />';
-    }
-    const remainingStars = 5 - Math.ceil(rating);
-    for (let i = 0; i < remainingStars; i++) {
-      stars += '<input type="radio" class="mask mask-star-2 bg-gray-300" disabled />';
-    }
-    
-    return stars;
-  }
-
   showProductDetail(productId) {
     const product = this.products.find(p => p.id === productId);
     if (!product) return;
@@ -318,12 +269,6 @@ class EcommerceApp {
         <div>
           <h3 class="text-3xl font-bold mb-4">${product.name}</h3>
           <div class="badge badge-secondary mb-4">${product.category}</div>
-          <div class="flex items-center gap-2 mb-4">
-            <div class="rating rating-sm">
-              ${this.renderStars(product.rating)}
-            </div>
-            <span class="text-gray-500">(${product.reviews} reviews)</span>
-          </div>
           <p class="text-gray-600 mb-6">${product.description}</p>
           <div class="text-4xl font-bold text-primary mb-6">$${product.price.toFixed(2)}</div>
           <div class="flex gap-4">
