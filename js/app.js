@@ -7,10 +7,14 @@ class EcommerceApp {
     this.currentCategory = 'All';
     this.searchTerm = '';
     this.currentProduct = null;
+    this.isAdminAuthenticated = false;
+    this.firebaseInitialized = false;
     this.init();
   }
 
   async init() {
+    // Initialize Firebase
+    await this.initializeFirebase();
     await this.loadProducts();
     this.renderCategories();
     this.renderProducts();
@@ -18,137 +22,176 @@ class EcommerceApp {
     this.setupEventListeners();
   }
 
+  async initializeFirebase() {
+    try {
+      await firebaseService.initialize();
+      this.firebaseInitialized = true;
+      console.log('Firebase initialized in app');
+    } catch (error) {
+      console.error('Failed to initialize Firebase:', error);
+      this.showNotification('Failed to connect to database. Some features may not work.', 'error');
+    }
+  }
+
   async loadProducts() {
     try {
-      // Try to fetch from JSON file first (for HTTP server deployment)
-      const response = await fetch('./data/products.json');
-      const data = await response.json();
-      this.products = data.products;
-      this.categories = data.categories;
+      if (this.firebaseInitialized) {
+        // Load from Firebase
+        this.products = await firebaseService.getProducts();
+        this.categories = await firebaseService.getCategories();
+        
+        // If no products in Firebase, migrate embedded data
+        if (this.products.length === 0) {
+          console.log('No products found in Firebase. Migrating embedded data...');
+          await this.migrateEmbeddedDataToFirebase();
+          this.products = await firebaseService.getProducts();
+          this.categories = await firebaseService.getCategories();
+        }
+      } else {
+        // Fallback to embedded data if Firebase not initialized
+        console.log('Loading products from embedded data');
+        await this.loadEmbeddedData();
+      }
     } catch (error) {
-      // Fallback to embedded data if fetch fails (for file:// protocol)
-      console.log('Loading products from embedded data');
-      const embeddedData = {
-        "products": [
-          {
-            "id": 1,
-            "name": "Wireless Headphones",
-            "category": "Electronics",
-            "price": 79.99,
-            "description": "Premium wireless headphones with noise cancellation and 30-hour battery life",
-            "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-            "inStock": true
-          },
-          {
-            "id": 2,
-            "name": "Smart Watch",
-            "category": "Electronics",
-            "price": 199.99,
-            "description": "Fitness tracking smartwatch with heart rate monitor and GPS",
-            "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
-            "inStock": true
-          },
-          {
-            "id": 3,
-            "name": "Laptop Backpack",
-            "category": "Accessories",
-            "price": 49.99,
-            "description": "Durable laptop backpack with multiple compartments and USB charging port",
-            "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop",
-            "inStock": true
-          },
-          {
-            "id": 4,
-            "name": "Mechanical Keyboard",
-            "category": "Electronics",
-            "price": 129.99,
-            "description": "RGB mechanical keyboard with cherry switches for gaming and typing",
-            "image": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&h=500&fit=crop",
-            "inStock": true
-          },
-          {
-            "id": 5,
-            "name": "Running Shoes",
-            "category": "Sports",
-            "price": 89.99,
-            "description": "Comfortable running shoes with excellent cushioning and support",
-            "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop",
-            "inStock": true
-          },
-          {
-            "id": 6,
-            "name": "Coffee Maker",
-            "category": "Home",
-            "price": 69.99,
-            "description": "Programmable coffee maker with thermal carafe and brew strength control",
-            "image": "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=500&h=500&fit=crop",
-            "inStock": true
-          },
-          {
-            "id": 7,
-            "name": "Yoga Mat",
-            "category": "Sports",
-            "price": 34.99,
-            "description": "Non-slip yoga mat with extra cushioning for comfortable practice",
-            "image": "https://images.unsplash.com/photo-1592432678016-e910b452f9a2?w=500&h=500&fit=crop",
-            "inStock": false
-          },
-          {
-            "id": 8,
-            "name": "Desk Lamp",
-            "category": "Home",
-            "price": 39.99,
-            "description": "LED desk lamp with adjustable brightness and color temperature",
-            "image": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&h=500&fit=crop",
-            "inStock": true
-          },
-          {
-            "id": 9,
-            "name": "Wireless Mouse",
-            "category": "Electronics",
-            "price": 29.99,
-            "description": "Ergonomic wireless mouse with precision tracking and long battery life",
-            "image": "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&h=500&fit=crop",
-            "inStock": true
-          },
-          {
-            "id": 10,
-            "name": "Water Bottle",
-            "category": "Sports",
-            "price": 24.99,
-            "description": "Insulated stainless steel water bottle keeps drinks cold for 24 hours",
-            "image": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&h=500&fit=crop",
-            "inStock": true
-          },
-          {
-            "id": 11,
-            "name": "Bluetooth Speaker",
-            "category": "Electronics",
-            "price": 59.99,
-            "description": "Portable Bluetooth speaker with 360-degree sound and waterproof design",
-            "image": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop",
-            "inStock": true
-          },
-          {
-            "id": 12,
-            "name": "Sunglasses",
-            "category": "Accessories",
-            "price": 79.99,
-            "description": "Polarized sunglasses with UV protection and stylish design",
-            "image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&h=500&fit=crop",
-            "inStock": true
-          }
-        ],
-        "categories": [
-          "All",
-          "Electronics",
-          "Accessories",
-          "Sports",
-          "Home"
-        ]
-      };
-      this.products = embeddedData.products;
-      this.categories = embeddedData.categories;
+      console.error('Error loading products:', error);
+      // Fallback to embedded data
+      await this.loadEmbeddedData();
+    }
+  }
+
+  async loadEmbeddedData() {
+    const embeddedData = {
+      "products": [
+        {
+          "id": 1,
+          "name": "Wireless Headphones",
+          "category": "Electronics",
+          "price": 79.99,
+          "description": "Premium wireless headphones with noise cancellation and 30-hour battery life",
+          "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
+          "inStock": true
+        },
+        {
+          "id": 2,
+          "name": "Smart Watch",
+          "category": "Electronics",
+          "price": 199.99,
+          "description": "Fitness tracking smartwatch with heart rate monitor and GPS",
+          "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
+          "inStock": true
+        },
+        {
+          "id": 3,
+          "name": "Laptop Backpack",
+          "category": "Accessories",
+          "price": 49.99,
+          "description": "Durable laptop backpack with multiple compartments and USB charging port",
+          "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500&h=500&fit=crop",
+          "inStock": true
+        },
+        {
+          "id": 4,
+          "name": "Mechanical Keyboard",
+          "category": "Electronics",
+          "price": 129.99,
+          "description": "RGB mechanical keyboard with cherry switches for gaming and typing",
+          "image": "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&h=500&fit=crop",
+          "inStock": true
+        },
+        {
+          "id": 5,
+          "name": "Running Shoes",
+          "category": "Sports",
+          "price": 89.99,
+          "description": "Comfortable running shoes with excellent cushioning and support",
+          "image": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500&h=500&fit=crop",
+          "inStock": true
+        },
+        {
+          "id": 6,
+          "name": "Coffee Maker",
+          "category": "Home",
+          "price": 69.99,
+          "description": "Programmable coffee maker with thermal carafe and brew strength control",
+          "image": "https://images.unsplash.com/photo-1517668808822-9ebb02f2a0e6?w=500&h=500&fit=crop",
+          "inStock": true
+        },
+        {
+          "id": 7,
+          "name": "Yoga Mat",
+          "category": "Sports",
+          "price": 34.99,
+          "description": "Non-slip yoga mat with extra cushioning for comfortable practice",
+          "image": "https://images.unsplash.com/photo-1592432678016-e910b452f9a2?w=500&h=500&fit=crop",
+          "inStock": false
+        },
+        {
+          "id": 8,
+          "name": "Desk Lamp",
+          "category": "Home",
+          "price": 39.99,
+          "description": "LED desk lamp with adjustable brightness and color temperature",
+          "image": "https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=500&h=500&fit=crop",
+          "inStock": true
+        },
+        {
+          "id": 9,
+          "name": "Wireless Mouse",
+          "category": "Electronics",
+          "price": 29.99,
+          "description": "Ergonomic wireless mouse with precision tracking and long battery life",
+          "image": "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&h=500&fit=crop",
+          "inStock": true
+        },
+        {
+          "id": 10,
+          "name": "Water Bottle",
+          "category": "Sports",
+          "price": 24.99,
+          "description": "Insulated stainless steel water bottle keeps drinks cold for 24 hours",
+          "image": "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&h=500&fit=crop",
+          "inStock": true
+        },
+        {
+          "id": 11,
+          "name": "Bluetooth Speaker",
+          "category": "Electronics",
+          "price": 59.99,
+          "description": "Portable Bluetooth speaker with 360-degree sound and waterproof design",
+          "image": "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop",
+          "inStock": true
+        },
+        {
+          "id": 12,
+          "name": "Sunglasses",
+          "category": "Accessories",
+          "price": 79.99,
+          "description": "Polarized sunglasses with UV protection and stylish design",
+          "image": "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=500&h=500&fit=crop",
+          "inStock": true
+        }
+      ],
+      "categories": [
+        "All",
+        "Electronics",
+        "Accessories",
+        "Sports",
+        "Home"
+      ]
+    };
+    this.products = embeddedData.products;
+    this.categories = embeddedData.categories;
+  }
+
+  async migrateEmbeddedDataToFirebase() {
+    try {
+      await this.loadEmbeddedData();
+      await firebaseService.migrateProducts(this.products);
+      await firebaseService.migrateCategories(this.categories);
+      this.showNotification('Data migrated to Firebase successfully!', 'success');
+    } catch (error) {
+      console.error('Error migrating data:', error);
+      this.showNotification('Error migrating data to Firebase', 'error');
     }
   }
 
@@ -440,7 +483,7 @@ class EcommerceApp {
     if (form) form.reset();
   }
 
-  handleCheckoutSubmit(e) {
+  async handleCheckoutSubmit(e) {
     e.preventDefault();
     
     // Get form values
@@ -455,24 +498,39 @@ class EcommerceApp {
       return;
     }
     
-    // In a real application, you would upload the screenshot and send the order data to a server
-    // For now, we'll simulate a successful order
-    console.log('Order Details:', {
-      screenshot: screenshot.name,
-      name,
-      phone,
-      address,
-      cart: this.cart,
-      total: this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    });
-    
-    // Clear cart and close modals
-    this.cart = [];
-    this.saveCart();
-    this.closeCheckoutModal();
-    this.toggleCart();
-    
-    this.showNotification('Order placed successfully! We will contact you shortly for delivery.', 'success');
+    try {
+      // Show loading notification
+      this.showNotification('Processing your order...', 'info');
+      
+      // Prepare order data
+      const orderData = {
+        screenshot: screenshot,
+        name: name,
+        phone: phone,
+        address: address,
+        cart: this.cart,
+        total: this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      };
+
+      // Save order to Firebase
+      if (this.firebaseInitialized) {
+        await firebaseService.saveOrder(orderData);
+      } else {
+        // Fallback: log to console if Firebase not available
+        console.log('Order Details (Firebase not available):', orderData);
+      }
+      
+      // Clear cart and close modals
+      this.cart = [];
+      this.saveCart();
+      this.closeCheckoutModal();
+      this.toggleCart();
+      
+      this.showNotification('Order placed successfully! We will contact you shortly for delivery.', 'success');
+    } catch (error) {
+      console.error('Error processing order:', error);
+      this.showNotification('Error processing order. Please try again.', 'error');
+    }
   }
 
   showNotification(message, type = 'info') {
@@ -512,6 +570,9 @@ class EcommerceApp {
       if (e.target.id === 'admin-dashboard-modal') {
         this.closeAdminDashboard();
       }
+      if (e.target.id === 'admin-login-modal') {
+        this.closeAdminLogin();
+      }
     });
 
     document.addEventListener('keydown', (e) => {
@@ -519,6 +580,7 @@ class EcommerceApp {
         this.closeModal();
         this.closeCheckoutModal();
         this.closeAdminDashboard();
+        this.closeAdminLogin();
         const cartDrawer = document.getElementById('cart-drawer');
         if (!cartDrawer.classList.contains('translate-x-full')) {
           this.toggleCart();
@@ -529,6 +591,12 @@ class EcommerceApp {
 
   // Admin Dashboard Methods
   openAdminDashboard() {
+    // Check if admin is authenticated
+    if (!this.isAdminAuthenticated) {
+      this.showAdminLogin();
+      return;
+    }
+
     const modal = document.getElementById('admin-dashboard-modal');
     this.renderDashboard();
     modal.classList.add('modal-open');
@@ -537,6 +605,55 @@ class EcommerceApp {
   closeAdminDashboard() {
     const modal = document.getElementById('admin-dashboard-modal');
     modal.classList.remove('modal-open');
+  }
+
+  showAdminLogin() {
+    const modal = document.getElementById('admin-login-modal');
+    modal.classList.add('modal-open');
+    
+    // Setup form submission handler
+    const form = document.getElementById('admin-login-form');
+    if (form) {
+      form.onsubmit = (e) => this.handleAdminLogin(e);
+    }
+  }
+
+  closeAdminLogin() {
+    const modal = document.getElementById('admin-login-modal');
+    modal.classList.remove('modal-open');
+    
+    // Reset form
+    const form = document.getElementById('admin-login-form');
+    if (form) form.reset();
+  }
+
+  async handleAdminLogin(e) {
+    e.preventDefault();
+    
+    const username = document.getElementById('admin-username').value.trim();
+    const password = document.getElementById('admin-password').value.trim();
+    
+    if (!username || !password) {
+      this.showNotification('Please enter both username and password', 'error');
+      return;
+    }
+    
+    try {
+      // Verify admin credentials with Firebase
+      const isValid = await firebaseService.verifyAdmin(username, password);
+      
+      if (isValid) {
+        this.isAdminAuthenticated = true;
+        this.closeAdminLogin();
+        this.showNotification('Login successful! Welcome Admin.', 'success');
+        this.openAdminDashboard();
+      } else {
+        this.showNotification('Invalid username or password', 'error');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      this.showNotification('Login failed. Please try again.', 'error');
+    }
   }
 
   getDashboardStats() {
@@ -826,9 +943,24 @@ class EcommerceApp {
 
               <div class="form-control md:col-span-2">
                 <label class="label">
-                  <span class="label-text font-semibold">Image URL *</span>
+                  <span class="label-text font-semibold">Product Image</span>
                 </label>
-                <input type="url" id="product-image" class="input input-bordered" required />
+                <div class="tabs tabs-boxed mb-2">
+                  <a class="tab tab-active" onclick="app.switchImageInput('url')">Image URL</a>
+                  <a class="tab" onclick="app.switchImageInput('file')">Upload Image</a>
+                </div>
+                <div id="image-url-input">
+                  <input type="url" id="product-image-url" class="input input-bordered w-full" placeholder="Enter image URL" />
+                  <label class="label">
+                    <span class="label-text-alt">Enter a URL to an external image</span>
+                  </label>
+                </div>
+                <div id="image-file-input" class="hidden">
+                  <input type="file" id="product-image" accept="image/*" class="file-input file-input-bordered w-full" />
+                  <label class="label">
+                    <span class="label-text-alt">Upload an image from your device (will be stored in Firebase Storage)</span>
+                  </label>
+                </div>
               </div>
 
               <div class="md:col-span-2 flex gap-2 justify-end">
@@ -919,6 +1051,24 @@ class EcommerceApp {
     }
   }
 
+  switchImageInput(type) {
+    const urlInput = document.getElementById('image-url-input');
+    const fileInput = document.getElementById('image-file-input');
+    const tabs = document.querySelectorAll('#product-form .tabs .tab');
+    
+    tabs.forEach(tab => tab.classList.remove('tab-active'));
+    
+    if (type === 'url') {
+      urlInput.classList.remove('hidden');
+      fileInput.classList.add('hidden');
+      tabs[0].classList.add('tab-active');
+    } else {
+      urlInput.classList.add('hidden');
+      fileInput.classList.remove('hidden');
+      tabs[1].classList.add('tab-active');
+    }
+  }
+
   showAddProductForm() {
     const formContainer = document.getElementById('product-form-container');
     const formTitle = document.getElementById('form-title');
@@ -940,40 +1090,66 @@ class EcommerceApp {
     document.getElementById('product-form').reset();
   }
 
-  handleProductFormSubmit(e) {
+  async handleProductFormSubmit(e) {
     e.preventDefault();
     
     const productId = document.getElementById('product-id').value;
+    const imageInput = document.getElementById('product-image');
+    const imageFile = imageInput.files ? imageInput.files[0] : null;
+    
     const productData = {
       name: document.getElementById('product-name').value.trim(),
       category: document.getElementById('product-category').value,
       price: parseFloat(document.getElementById('product-price').value),
       description: document.getElementById('product-description').value.trim(),
-      image: document.getElementById('product-image').value.trim(),
+      image: document.getElementById('product-image-url')?.value?.trim() || '',
       inStock: document.getElementById('product-instock').checked
     };
     
-    if (productId) {
-      // Update existing product
-      const product = this.products.find(p => p.id === parseInt(productId));
-      if (product) {
-        Object.assign(product, productData);
+    try {
+      this.showNotification('Saving product...', 'info');
+      
+      if (productId) {
+        // Update existing product
+        if (this.firebaseInitialized) {
+          await firebaseService.updateProduct(productId, productData, imageFile);
+        } else {
+          // Fallback for local updates
+          const product = this.products.find(p => p.id === productId);
+          if (product) {
+            Object.assign(product, productData);
+          }
+        }
         this.showNotification('Product updated successfully!', 'success');
+      } else {
+        // Add new product
+        if (this.firebaseInitialized) {
+          await firebaseService.addProduct(productData, imageFile);
+        } else {
+          // Fallback for local addition
+          const newId = Math.max(...this.products.map(p => parseInt(p.id) || 0), 0) + 1;
+          this.products.push({
+            id: newId.toString(),
+            ...productData
+          });
+        }
+        this.showNotification('Product added successfully!', 'success');
       }
-    } else {
-      // Add new product
-      const newId = Math.max(...this.products.map(p => p.id), 0) + 1;
-      this.products.push({
-        id: newId,
-        ...productData
-      });
-      this.showNotification('Product added successfully!', 'success');
+      
+      this.cancelProductForm();
+      
+      // Reload products from Firebase
+      if (this.firebaseInitialized) {
+        await this.loadProducts();
+      }
+      
+      this.renderDashboard();
+      this.renderProducts();
+      this.renderCategories();
+    } catch (error) {
+      console.error('Error saving product:', error);
+      this.showNotification('Error saving product. Please try again.', 'error');
     }
-    
-    this.cancelProductForm();
-    this.renderDashboard();
-    this.renderProducts();
-    this.renderCategories();
   }
 
   viewProduct(productId) {
@@ -994,8 +1170,11 @@ class EcommerceApp {
     document.getElementById('product-category').value = product.category;
     document.getElementById('product-price').value = product.price;
     document.getElementById('product-description').value = product.description;
-    document.getElementById('product-image').value = product.image;
+    document.getElementById('product-image-url').value = product.image || '';
     document.getElementById('product-instock').checked = product.inStock;
+    
+    // Show URL input by default
+    this.switchImageInput('url');
     
     formContainer.classList.remove('hidden');
     formContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1003,16 +1182,35 @@ class EcommerceApp {
     form.onsubmit = (e) => this.handleProductFormSubmit(e);
   }
 
-  deleteProduct(productId) {
+  async deleteProduct(productId) {
     const product = this.products.find(p => p.id === productId);
     if (!product) return;
     
     if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
-      this.products = this.products.filter(p => p.id !== productId);
-      this.showNotification('Product deleted successfully!', 'info');
-      this.renderDashboard();
-      this.renderProducts();
-      this.renderCategories();
+      try {
+        this.showNotification('Deleting product...', 'info');
+        
+        if (this.firebaseInitialized) {
+          await firebaseService.deleteProduct(productId);
+        } else {
+          // Fallback for local deletion
+          this.products = this.products.filter(p => p.id !== productId);
+        }
+        
+        this.showNotification('Product deleted successfully!', 'success');
+        
+        // Reload products from Firebase
+        if (this.firebaseInitialized) {
+          await this.loadProducts();
+        }
+        
+        this.renderDashboard();
+        this.renderProducts();
+        this.renderCategories();
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        this.showNotification('Error deleting product. Please try again.', 'error');
+      }
     }
   }
 }
