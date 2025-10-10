@@ -9,6 +9,8 @@ class EcommerceApp {
     this.currentProduct = null;
     this.isAdminAuthenticated = false;
     this.firebaseInitialized = false;
+    this.clickCount = 0;
+    this.clickTimer = null;
     this.init();
   }
 
@@ -557,6 +559,31 @@ class EcommerceApp {
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.searchProducts(e.target.value);
+      });
+    }
+
+    // Triple-click listener for ShopHub logo
+    const shopHubLogo = document.getElementById('shophub-logo');
+    if (shopHubLogo) {
+      shopHubLogo.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.clickCount++;
+        
+        // Clear existing timer
+        if (this.clickTimer) {
+          clearTimeout(this.clickTimer);
+        }
+        
+        // Check if triple-click achieved
+        if (this.clickCount === 3) {
+          this.clickCount = 0;
+          this.openAdminDashboard();
+        } else {
+          // Reset counter after 500ms if no third click
+          this.clickTimer = setTimeout(() => {
+            this.clickCount = 0;
+          }, 500);
+        }
       });
     }
 
