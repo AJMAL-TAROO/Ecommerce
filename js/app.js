@@ -714,6 +714,7 @@ class EcommerceApp {
       <div role="tablist" class="tabs tabs-boxed mb-6">
         <a role="tab" class="tab tab-active" onclick="app.switchDashboardTab('stats')">Statistics</a>
         <a role="tab" class="tab" onclick="app.switchDashboardTab('products')">Product Management</a>
+        <a role="tab" class="tab" onclick="app.switchDashboardTab('orders')">Orders</a>
       </div>
 
       <!-- Statistics Tab -->
@@ -1030,12 +1031,535 @@ class EcommerceApp {
           </div>
         </div>
       </div>
+
+      <!-- Orders Management Tab -->
+      <div id="orders-tab" class="dashboard-tab hidden">
+        <div class="mb-6">
+          <h4 class="text-2xl font-bold mb-4">Orders Management</h4>
+          <div id="orders-content">
+            <div class="flex justify-center py-12">
+              <span class="loading loading-spinner loading-lg"></span>
+            </div>
+          </div>
+        </div>
+      </div>
     `;
+
+    // Load orders if Firebase is initialized
+    if (this.firebaseInitialized) {
+      this.loadOrders();
+    }
+  }
+
+  async loadOrders() {
+    try {
+      const orders = await firebaseService.getOrders();
+      this.renderOrdersTab(orders);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+      const ordersContent = document.getElementById('orders-content');
+      if (ordersContent) {
+        ordersContent.innerHTML = `
+          <div class="alert alert-error">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span>Failed to load orders. Please try again.</span>
+          </div>
+        `;
+      }
+    }
+  }
+
+  renderOrdersTab(orders) {
+    const ordersContent = document.getElementById('orders-content');
+    if (!ordersContent) return;
+
+    if (orders.length === 0) {
+      ordersContent.innerHTML = `
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle mr-2"></i>
+          <span>No orders found yet.</span>
+        </div>
+      `;
+      return;
+    }
+
+    // Calculate order statistics
+    const orderStats = {
+      total: orders.length,
+      pending: orders.filter(o => o.status === 'pending').length,
+      processing: orders.filter(o => o.status === 'processing').length,
+      completed: orders.filter(o => o.status === 'completed').length,
+      cancelled: orders.filter(o => o.status === 'cancelled').length,
+      totalRevenue: orders
+        .filter(o => o.status === 'completed')
+        .reduce((sum, o) => sum + (o.totalAmount || 0), 0)
+    };
+
+    ordersContent.innerHTML = `
+      <!-- Order Statistics -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-4">
+          <div class="text-center">
+            <p class="text-sm opacity-80">Total Orders</p>
+            <h3 class="text-3xl font-bold mt-1">${orderStats.total}</h3>
+          </div>
+        </div>
+        <div class="stat-card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-4">
+          <div class="text-center">
+            <p class="text-sm opacity-80">Pending</p>
+            <h3 class="text-3xl font-bold mt-1">${orderStats.pending}</h3>
+          </div>
+        </div>
+        <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow-lg p-4">
+          <div class="text-center">
+            <p class="text-sm opacity-80">Processing</p>
+            <h3 class="text-3xl font-bold mt-1">${orderStats.processing}</h3>
+          </div>
+        </div>
+        <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow-lg p-4">
+          <div class="text-center">
+            <p class="text-sm opacity-80">Completed</p>
+            <h3 class="text-3xl font-bold mt-1">${orderStats.completed}</h3>
+          </div>
+        </div>
+        <div class="stat-card bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-lg shadow-lg p-4">
+          <div class="text-center">
+            <p class="text-sm opacity-80">Cancelled</p>
+            <h3 class="text-3xl font-bold mt-1">${orderStats.cancelled}</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Revenue Card -->
+      <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg shadow-lg p-6 mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm opacity-80">Total Revenue (Completed Orders)</p>
+            <h3 class="text-4xl font-bold mt-2">₨${orderStats.totalRevenue.toFixed(2)}</h3>
+          </div>
+          <div class="text-6xl opacity-80">
+            <i class="fas fa-money-bill-wave"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-base-100 rounded-lg shadow-lg p-4 mb-6">
+        <div class="flex flex-wrap gap-4 items-center">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-semibold">Filter by Status</span>
+            </label>
+            <select id="order-status-filter" class="select select-bordered" onchange="app.filterOrders()">
+              <option value="all">All Orders</option>
+              <option value="pending">Pending</option>
+              <option value="processing">Processing</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div class="form-control flex-1">
+            <label class="label">
+              <span class="label-text font-semibold">Search</span>
+            </label>
+            <input 
+              type="text" 
+              id="order-search" 
+              placeholder="Search by customer name, phone, or order ID..." 
+              class="input input-bordered w-full"
+              oninput="app.filterOrders()" 
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Orders Table -->
+      <div class="bg-base-100 rounded-lg shadow-lg p-6">
+        <h5 class="text-xl font-bold mb-4">All Orders</h5>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="orders-table-body">
+              ${this.renderOrderRows(orders)}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    // Store orders for filtering
+    this.allOrders = orders;
+  }
+
+  renderOrderRows(orders) {
+    return orders.map(order => {
+      const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A';
+      const itemCount = order.items ? order.items.length : 0;
+      const statusBadgeClass = {
+        'pending': 'badge-warning',
+        'processing': 'badge-info',
+        'completed': 'badge-success',
+        'cancelled': 'badge-error'
+      }[order.status] || 'badge-ghost';
+
+      return `
+        <tr data-order-id="${order.id}" data-status="${order.status}" data-customer="${order.customerName?.toLowerCase() || ''}" data-phone="${order.customerPhone || ''}">
+          <td class="font-mono text-sm">${order.orderId?.substring(0, 8) || order.id?.substring(0, 8)}...</td>
+          <td>
+            <div>
+              <div class="font-semibold">${order.customerName || 'N/A'}</div>
+              <div class="text-sm text-gray-500">${order.customerPhone || ''}</div>
+            </div>
+          </td>
+          <td class="text-center">
+            <span class="badge badge-primary">${itemCount}</span>
+          </td>
+          <td class="font-bold text-primary">₨${(order.totalAmount || 0).toFixed(2)}</td>
+          <td>
+            <span class="badge ${statusBadgeClass} badge-lg">${order.status || 'pending'}</span>
+          </td>
+          <td class="text-sm">${orderDate}</td>
+          <td>
+            <div class="flex gap-2">
+              <button class="btn btn-sm btn-info" onclick="app.viewOrderDetails('${order.id}')" title="View Details">
+                <i class="fas fa-eye"></i>
+              </button>
+              <div class="dropdown dropdown-end">
+                <label tabindex="0" class="btn btn-sm btn-primary" title="Update Status">
+                  <i class="fas fa-edit"></i>
+                </label>
+                <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-50">
+                  <li><a onclick="app.updateOrderStatus('${order.id}', 'pending')">
+                    <i class="fas fa-clock text-warning"></i> Pending
+                  </a></li>
+                  <li><a onclick="app.updateOrderStatus('${order.id}', 'processing')">
+                    <i class="fas fa-spinner text-info"></i> Processing
+                  </a></li>
+                  <li><a onclick="app.updateOrderStatus('${order.id}', 'completed')">
+                    <i class="fas fa-check text-success"></i> Completed
+                  </a></li>
+                  <li><a onclick="app.updateOrderStatus('${order.id}', 'cancelled')">
+                    <i class="fas fa-times text-error"></i> Cancelled
+                  </a></li>
+                </ul>
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  filterOrders() {
+    const statusFilter = document.getElementById('order-status-filter')?.value || 'all';
+    const searchTerm = document.getElementById('order-search')?.value.toLowerCase() || '';
+    const tableBody = document.getElementById('orders-table-body');
+    
+    if (!tableBody || !this.allOrders) return;
+
+    let filteredOrders = this.allOrders;
+
+    // Filter by status
+    if (statusFilter !== 'all') {
+      filteredOrders = filteredOrders.filter(order => order.status === statusFilter);
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      filteredOrders = filteredOrders.filter(order => {
+        const customerName = (order.customerName || '').toLowerCase();
+        const customerPhone = (order.customerPhone || '').toLowerCase();
+        const orderId = (order.orderId || order.id || '').toLowerCase();
+        
+        return customerName.includes(searchTerm) || 
+               customerPhone.includes(searchTerm) || 
+               orderId.includes(searchTerm);
+      });
+    }
+
+    tableBody.innerHTML = this.renderOrderRows(filteredOrders);
+  }
+
+  async viewOrderDetails(orderId) {
+    try {
+      const order = this.allOrders?.find(o => o.id === orderId);
+      if (!order) {
+        this.showNotification('Order not found', 'error');
+        return;
+      }
+
+      const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A';
+      const statusBadgeClass = {
+        'pending': 'badge-warning',
+        'processing': 'badge-info',
+        'completed': 'badge-success',
+        'cancelled': 'badge-error'
+      }[order.status] || 'badge-ghost';
+
+      const modal = document.getElementById('product-modal');
+      const modalContent = document.getElementById('modal-content');
+      
+      modalContent.innerHTML = `
+        <div class="flex justify-between items-start mb-4">
+          <h3 class="font-bold text-2xl">Order Details</h3>
+          <button class="btn btn-ghost btn-circle" onclick="document.getElementById('product-modal').classList.remove('modal-open')">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Order Info -->
+          <div class="bg-base-200 rounded-lg p-4">
+            <h4 class="font-bold text-lg mb-3 flex items-center">
+              <i class="fas fa-receipt mr-2 text-primary"></i>
+              Order Information
+            </h4>
+            <div class="space-y-2">
+              <p><span class="font-semibold">Order ID:</span> <span class="font-mono text-sm">${order.orderId || order.id}</span></p>
+              <p><span class="font-semibold">Date:</span> ${orderDate}</p>
+              <p><span class="font-semibold">Status:</span> <span class="badge ${statusBadgeClass} badge-lg ml-2">${order.status || 'pending'}</span></p>
+              <p><span class="font-semibold">Total Amount:</span> <span class="text-primary font-bold text-lg">₨${(order.totalAmount || 0).toFixed(2)}</span></p>
+            </div>
+          </div>
+
+          <!-- Customer Info -->
+          <div class="bg-base-200 rounded-lg p-4">
+            <h4 class="font-bold text-lg mb-3 flex items-center">
+              <i class="fas fa-user mr-2 text-primary"></i>
+              Customer Information
+            </h4>
+            <div class="space-y-2">
+              <p><span class="font-semibold">Name:</span> ${order.customerName || 'N/A'}</p>
+              <p><span class="font-semibold">Phone:</span> ${order.customerPhone || 'N/A'}</p>
+              <p><span class="font-semibold">Address:</span></p>
+              <p class="bg-base-100 p-2 rounded">${order.customerAddress || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="bg-base-200 rounded-lg p-4 mb-6">
+          <h4 class="font-bold text-lg mb-3 flex items-center">
+            <i class="fas fa-shopping-bag mr-2 text-primary"></i>
+            Order Items
+          </h4>
+          <div class="overflow-x-auto">
+            <table class="table table-compact w-full">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Price</th>
+                  <th>Quantity</th>
+                  <th>Subtotal</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${(order.items || []).map(item => `
+                  <tr>
+                    <td>
+                      <div class="flex items-center gap-2">
+                        <div class="avatar">
+                          <div class="w-10 h-10 rounded">
+                            <img src="${item.image || ''}" alt="${item.name}" />
+                          </div>
+                        </div>
+                        <span class="font-semibold">${item.name}</span>
+                      </div>
+                    </td>
+                    <td>₨${(item.price || 0).toFixed(2)}</td>
+                    <td>${item.quantity || 1}</td>
+                    <td class="font-bold">₨${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+              <tfoot>
+                <tr class="font-bold">
+                  <td colspan="3" class="text-right">Total:</td>
+                  <td class="text-primary text-lg">₨${(order.totalAmount || 0).toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <!-- Payment Screenshot -->
+        ${order.paymentScreenshot ? `
+          <div class="bg-base-200 rounded-lg p-4">
+            <h4 class="font-bold text-lg mb-3 flex items-center">
+              <i class="fas fa-image mr-2 text-primary"></i>
+              Payment Proof
+            </h4>
+            <div class="flex justify-center">
+              <img src="${order.paymentScreenshot}" alt="Payment Screenshot" class="max-w-full max-h-96 rounded-lg shadow-lg" />
+            </div>
+            <div class="mt-3 text-center">
+              <a href="${order.paymentScreenshot}" target="_blank" class="btn btn-sm btn-primary">
+                <i class="fas fa-external-link-alt mr-2"></i>
+                Open in New Tab
+              </a>
+            </div>
+          </div>
+        ` : `
+          <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            <span>No payment screenshot available for this order.</span>
+          </div>
+        `}
+
+        <!-- Actions -->
+        <div class="flex gap-2 justify-end mt-6">
+          <button class="btn btn-outline" onclick="document.getElementById('product-modal').classList.remove('modal-open')">
+            Close
+          </button>
+          <button class="btn btn-primary" onclick="app.printReceipt('${orderId}')">
+            <i class="fas fa-print mr-2"></i>
+            Print Receipt
+          </button>
+        </div>
+      `;
+
+      modal.classList.add('modal-open');
+    } catch (error) {
+      console.error('Error viewing order details:', error);
+      this.showNotification('Failed to load order details', 'error');
+    }
+  }
+
+  async updateOrderStatus(orderId, newStatus) {
+    try {
+      await firebaseService.updateOrderStatus(orderId, newStatus);
+      this.showNotification(`Order status updated to ${newStatus}`, 'success');
+      
+      // Reload orders to reflect changes
+      await this.loadOrders();
+    } catch (error) {
+      console.error('Error updating order status:', error);
+      this.showNotification('Failed to update order status', 'error');
+    }
+  }
+
+  printReceipt(orderId) {
+    const order = this.allOrders?.find(o => o.id === orderId);
+    if (!order) {
+      this.showNotification('Order not found', 'error');
+      return;
+    }
+
+    const orderDate = order.createdAt ? new Date(order.createdAt).toLocaleString() : 'N/A';
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt - Order ${order.orderId || order.id}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+          }
+          h1, h2, h3 { color: #333; }
+          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+          .section { margin-bottom: 20px; }
+          .section-title { font-weight: bold; font-size: 18px; margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+          table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+          th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+          th { background-color: #f5f5f5; font-weight: bold; }
+          .total-row { font-weight: bold; font-size: 18px; }
+          .text-right { text-align: right; }
+          .badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+          .badge-pending { background-color: #fef3c7; color: #92400e; }
+          .badge-processing { background-color: #dbeafe; color: #1e40af; }
+          .badge-completed { background-color: #d1fae5; color: #065f46; }
+          .badge-cancelled { background-color: #fee2e2; color: #991b1b; }
+          @media print {
+            body { margin: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>ShopHub</h1>
+          <p>E-commerce Platform</p>
+          <h2>Order Receipt</h2>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Order Information</div>
+          <p><strong>Order ID:</strong> ${order.orderId || order.id}</p>
+          <p><strong>Date:</strong> ${orderDate}</p>
+          <p><strong>Status:</strong> <span class="badge badge-${order.status}">${order.status || 'pending'}</span></p>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Customer Information</div>
+          <p><strong>Name:</strong> ${order.customerName || 'N/A'}</p>
+          <p><strong>Phone:</strong> ${order.customerPhone || 'N/A'}</p>
+          <p><strong>Address:</strong> ${order.customerAddress || 'N/A'}</p>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Order Items</div>
+          <table>
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th class="text-right">Price</th>
+                <th class="text-right">Quantity</th>
+                <th class="text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${(order.items || []).map(item => `
+                <tr>
+                  <td>${item.name}</td>
+                  <td class="text-right">₨${(item.price || 0).toFixed(2)}</td>
+                  <td class="text-right">${item.quantity || 1}</td>
+                  <td class="text-right">₨${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td colspan="3" class="text-right">Total:</td>
+                <td class="text-right">₨${(order.totalAmount || 0).toFixed(2)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div class="section" style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc;">
+          <p>Thank you for your purchase!</p>
+          <p style="font-size: 12px; color: #666;">This is a computer-generated receipt.</p>
+        </div>
+
+        <script>
+          window.onload = function() {
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
   }
 
   switchDashboardTab(tabName) {
     const statsTab = document.getElementById('stats-tab');
     const productsTab = document.getElementById('products-tab');
+    const ordersTab = document.getElementById('orders-tab');
     const tabs = document.querySelectorAll('#dashboard-content .tab');
     
     tabs.forEach(tab => tab.classList.remove('tab-active'));
@@ -1043,11 +1567,18 @@ class EcommerceApp {
     if (tabName === 'stats') {
       statsTab.classList.remove('hidden');
       productsTab.classList.add('hidden');
+      ordersTab.classList.add('hidden');
       tabs[0].classList.add('tab-active');
-    } else {
+    } else if (tabName === 'products') {
       statsTab.classList.add('hidden');
       productsTab.classList.remove('hidden');
+      ordersTab.classList.add('hidden');
       tabs[1].classList.add('tab-active');
+    } else if (tabName === 'orders') {
+      statsTab.classList.add('hidden');
+      productsTab.classList.add('hidden');
+      ordersTab.classList.remove('hidden');
+      tabs[2].classList.add('tab-active');
     }
   }
 
