@@ -281,11 +281,11 @@ class EcommerceApp {
           <div class="card-actions justify-between items-center mt-4">
             <span class="text-2xl font-bold text-primary">₨${product.price.toFixed(2)}</span>
             <div class="flex gap-2">
-              <button class="btn btn-sm btn-outline" onclick="app.showProductDetail(${product.id})">
+              <button class="btn btn-sm btn-outline" onclick="app.showProductDetail('${product.id}')">
                 Details
               </button>
               <button class="btn btn-sm btn-primary" 
-                      onclick="app.addToCart(${product.id})"
+                      onclick="app.addToCart('${product.id}')"
                       ${!product.inStock ? 'disabled' : ''}>
                 Add to Cart
               </button>
@@ -316,7 +316,7 @@ class EcommerceApp {
           <div class="text-4xl font-bold text-primary mb-6">₨${product.price.toFixed(2)}</div>
           <div class="flex gap-4">
             ${product.inStock ? `
-              <button class="btn btn-primary btn-lg flex-1" onclick="app.addToCart(${product.id}); app.closeModal()">
+              <button class="btn btn-primary btn-lg flex-1" onclick="app.addToCart('${product.id}'); app.closeModal()">
                 Add to Cart
               </button>
             ` : `
@@ -426,14 +426,14 @@ class EcommerceApp {
           <h4 class="font-semibold">${item.name}</h4>
           <p class="text-sm text-gray-600">₨${item.price.toFixed(2)}</p>
           <div class="flex items-center gap-2 mt-2">
-            <button class="btn btn-xs" onclick="app.updateQuantity(${item.id}, -1)">-</button>
+            <button class="btn btn-xs" onclick="app.updateQuantity('${item.id}', -1)">-</button>
             <span class="px-3">${item.quantity}</span>
-            <button class="btn btn-xs" onclick="app.updateQuantity(${item.id}, 1)">+</button>
+            <button class="btn btn-xs" onclick="app.updateQuantity('${item.id}', 1)">+</button>
           </div>
         </div>
         <div class="text-right">
           <p class="font-bold">₨${(item.price * item.quantity).toFixed(2)}</p>
-          <button class="btn btn-sm btn-error btn-outline mt-2" onclick="app.removeFromCart(${item.id})">
+          <button class="btn btn-sm btn-error btn-outline mt-2" onclick="app.removeFromCart('${item.id}')">
             Remove
           </button>
         </div>
@@ -1012,13 +1012,13 @@ class EcommerceApp {
                     </td>
                     <td>
                       <div class="flex gap-2">
-                        <button class="btn btn-sm btn-info" onclick="app.viewProduct(${product.id})">
+                        <button class="btn btn-sm btn-info" onclick="app.viewProduct('${product.id}')">
                           <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn btn-sm btn-warning" onclick="app.editProduct(${product.id})">
+                        <button class="btn btn-sm btn-warning" onclick="app.editProduct('${product.id}')">
                           <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-error" onclick="app.deleteProduct(${product.id})">
+                        <button class="btn btn-sm btn-error" onclick="app.deleteProduct('${product.id}')">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
