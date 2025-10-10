@@ -562,10 +562,10 @@ class EcommerceApp {
       });
     }
 
-    // Triple-click listener for ShopHub logo
-    const shopHubLogo = document.getElementById('shophub-logo');
-    if (shopHubLogo) {
-      shopHubLogo.addEventListener('click', (e) => {
+    // Triple-click listener for BeverlyShop logo
+    const beverlyShopLogo = document.getElementById('beverlyshop-logo');
+    if (beverlyShopLogo) {
+      beverlyShopLogo.addEventListener('click', (e) => {
         e.preventDefault();
         this.clickCount++;
         
@@ -1518,7 +1518,7 @@ class EcommerceApp {
       </head>
       <body>
         <div class="header">
-          <h1>ShopHub</h1>
+          <h1>BeverlyShop</h1>
           <p>E-commerce Platform</p>
           <h2>Order Receipt</h2>
         </div>
