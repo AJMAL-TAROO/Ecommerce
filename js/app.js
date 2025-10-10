@@ -613,6 +613,12 @@ class EcommerceApp {
           this.toggleCart();
         }
       }
+      
+      // Keyboard shortcut for admin dashboard: Ctrl+Shift+A
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        this.openAdminDashboard();
+      }
     });
   }
 
