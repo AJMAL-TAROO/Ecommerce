@@ -105,7 +105,9 @@ Alternatively, you can simply open `index.html` directly in your browser.
 - Submit the order (stored in Firebase Realtime Database)
 
 ### Admin Dashboard
-- Click on the "BeverlyShop" logo in the navigation bar
+- Access the admin dashboard using one of these methods:
+  - **Triple-click** on the "BeverlyShop" logo in the navigation bar
+  - **Keyboard shortcut**: Press `Ctrl+Shift+A` (Windows/Linux) or `Cmd+Shift+A` (Mac)
 - Login with admin credentials (default: username: `admin`, password: `admin123`)
 - View statistics and manage products
 - Add new products with image upload to Firebase Storage
