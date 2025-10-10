@@ -317,7 +317,7 @@ class FirebaseService {
       const defaultAdmin = {
         username: 'admin',
         password: 'admin123', // In production, this should be hashed
-        email: 'admin@shophub.com',
+        email: 'admin@beverlyshop.com',
         createdAt: firebase.database.ServerValue.TIMESTAMP
       };
 

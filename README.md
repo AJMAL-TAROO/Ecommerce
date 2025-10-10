@@ -1,4 +1,4 @@
-# ShopHub - E-commerce Platform
+# BeverlyShop - E-commerce Platform
 
 A fully functional e-commerce platform built with HTML, CSS, JavaScript, TailwindCSS, and DaisyUI components. This project uses Firebase Realtime Database for data storage and Firebase Storage for product images.
 
@@ -105,7 +105,7 @@ Alternatively, you can simply open `index.html` directly in your browser.
 - Submit the order (stored in Firebase Realtime Database)
 
 ### Admin Dashboard
-- Click on the "ShopHub" logo in the navigation bar
+- Click on the "BeverlyShop" logo in the navigation bar
 - Login with admin credentials (default: username: `admin`, password: `admin123`)
 - View statistics and manage products
 - Add new products with image upload to Firebase Storage
@@ -146,7 +146,7 @@ The Firebase Realtime Database uses the following structure:
   "admin": {
     "username": "admin",
     "password": "admin123",
-    "email": "admin@shophub.com",
+    "email": "admin@beverlyshop.com",
     "createdAt": timestamp
   }
 }
@@ -156,7 +156,7 @@ The Firebase Realtime Database uses the following structure:
 
 ### Adding New Products
 Use the Admin Dashboard to add new products:
-1. Click on the ShopHub logo and login
+1. Click on the BeverlyShop logo and login
 2. Navigate to "Product Management" tab
 3. Click "Add New Product"
 4. Fill in the details and either provide an image URL or upload an image file

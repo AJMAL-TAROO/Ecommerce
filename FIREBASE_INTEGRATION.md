@@ -1,7 +1,7 @@
 # Firebase Integration Summary
 
 ## Overview
-This document summarizes the Firebase integration for the ShopHub E-commerce platform.
+This document summarizes the Firebase integration for the BeverlyShop E-commerce platform.
 
 ## Changes Made
 
@@ -85,7 +85,7 @@ This document summarizes the Firebase integration for the ShopHub E-commerce pla
   "admin": {
     "username": "admin",
     "password": "admin123",
-    "email": "admin@shophub.com",
+    "email": "admin@beverlyshop.com",
     "createdAt": timestamp
   }
 }
