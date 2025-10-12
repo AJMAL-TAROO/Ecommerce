@@ -271,17 +271,30 @@ class EcommerceApp {
 
     productsContainer.innerHTML = filteredProducts.map(product => `
       <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow">
-        <figure class="h-64 overflow-hidden">
+        <figure class="h-64 overflow-hidden relative">
           <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover" />
+          ${product.promotion > 0 ? `
+            <div class="badge badge-error absolute top-2 right-2 text-lg font-bold">
+              -${product.promotion}%
+            </div>
+          ` : ''}
         </figure>
         <div class="card-body">
           <h2 class="card-title">
             ${product.name}
             ${!product.inStock ? '<div class="badge badge-error">Out of Stock</div>' : ''}
+            ${product.promotion > 0 ? '<div class="badge badge-secondary">On Sale</div>' : ''}
           </h2>
           <p class="text-sm text-gray-600 line-clamp-2">${product.description}</p>
           <div class="card-actions justify-between items-center mt-4">
-            <span class="text-2xl font-bold text-primary">₨${product.price.toFixed(2)}</span>
+            ${product.promotion > 0 ? `
+              <div>
+                <span class="text-lg text-gray-500 line-through">₨${product.price.toFixed(2)}</span>
+                <span class="text-2xl font-bold text-primary ml-2">₨${(product.price * (1 - product.promotion / 100)).toFixed(2)}</span>
+              </div>
+            ` : `
+              <span class="text-2xl font-bold text-primary">₨${product.price.toFixed(2)}</span>
+            `}
             <div class="flex gap-2">
               <button class="btn btn-sm btn-outline" onclick="app.showProductDetail('${product.id}')">
                 Details
@@ -308,14 +321,30 @@ class EcommerceApp {
 
     modalContent.innerHTML = `
       <div class="grid md:grid-cols-2 gap-6">
-        <div>
+        <div class="relative">
           <img src="${product.image}" alt="${product.name}" class="w-full rounded-lg" />
+          ${product.promotion > 0 ? `
+            <div class="badge badge-error absolute top-2 right-2 text-xl font-bold p-4">
+              -${product.promotion}% OFF
+            </div>
+          ` : ''}
         </div>
         <div>
           <h3 class="text-3xl font-bold mb-4">${product.name}</h3>
-          <div class="badge badge-secondary mb-4">${product.category}</div>
+          <div class="flex gap-2 mb-4">
+            <div class="badge badge-secondary">${product.category}</div>
+            ${product.promotion > 0 ? '<div class="badge badge-accent">On Sale</div>' : ''}
+          </div>
           <p class="text-gray-600 mb-6">${product.description}</p>
-          <div class="text-4xl font-bold text-primary mb-6">₨${product.price.toFixed(2)}</div>
+          ${product.promotion > 0 ? `
+            <div class="mb-6">
+              <div class="text-2xl text-gray-500 line-through">₨${product.price.toFixed(2)}</div>
+              <div class="text-4xl font-bold text-primary">₨${(product.price * (1 - product.promotion / 100)).toFixed(2)}</div>
+              <div class="text-lg text-success font-semibold">You save ₨${(product.price * product.promotion / 100).toFixed(2)} (${product.promotion}%)</div>
+            </div>
+          ` : `
+            <div class="text-4xl font-bold text-primary mb-6">₨${product.price.toFixed(2)}</div>
+          `}
           <div class="flex gap-4">
             ${product.inStock ? `
               <button class="btn btn-primary btn-lg flex-1" onclick="app.addToCart('${product.id}'); app.closeModal()">
@@ -421,12 +450,19 @@ class EcommerceApp {
       return;
     }
 
-    cartItems.innerHTML = this.cart.map(item => `
+    cartItems.innerHTML = this.cart.map(item => {
+      const effectivePrice = item.promotion > 0 ? item.price * (1 - item.promotion / 100) : item.price;
+      return `
       <div class="flex gap-4 p-4 bg-base-200 rounded-lg">
         <img src="${item.image}" alt="${item.name}" class="w-20 h-20 object-cover rounded" />
         <div class="flex-1">
           <h4 class="font-semibold">${item.name}</h4>
-          <p class="text-sm text-gray-600">₨${item.price.toFixed(2)}</p>
+          ${item.promotion > 0 ? `
+            <p class="text-sm text-gray-500 line-through">₨${item.price.toFixed(2)}</p>
+            <p class="text-sm text-primary font-bold">₨${effectivePrice.toFixed(2)} <span class="badge badge-error badge-xs">-${item.promotion}%</span></p>
+          ` : `
+            <p class="text-sm text-gray-600">₨${item.price.toFixed(2)}</p>
+          `}
           <div class="flex items-center gap-2 mt-2">
             <button class="btn btn-xs" onclick="app.updateQuantity('${item.id}', -1)">-</button>
             <span class="px-3">${item.quantity}</span>
@@ -434,15 +470,19 @@ class EcommerceApp {
           </div>
         </div>
         <div class="text-right">
-          <p class="font-bold">₨${(item.price * item.quantity).toFixed(2)}</p>
+          <p class="font-bold">₨${(effectivePrice * item.quantity).toFixed(2)}</p>
           <button class="btn btn-sm btn-error btn-outline mt-2" onclick="app.removeFromCart('${item.id}')">
             Remove
           </button>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
 
-    const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = this.cart.reduce((sum, item) => {
+      const effectivePrice = item.promotion > 0 ? item.price * (1 - item.promotion / 100) : item.price;
+      return sum + (effectivePrice * item.quantity);
+    }, 0);
     cartTotal.textContent = `₨${total.toFixed(2)}`;
   }
 
@@ -452,7 +492,10 @@ class EcommerceApp {
       return;
     }
 
-    const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const total = this.cart.reduce((sum, item) => {
+      const effectivePrice = item.promotion > 0 ? item.price * (1 - item.promotion / 100) : item.price;
+      return sum + (effectivePrice * item.quantity);
+    }, 0);
     const itemCount = this.cart.reduce((sum, item) => sum + item.quantity, 0);
 
     // Show checkout modal
@@ -511,7 +554,10 @@ class EcommerceApp {
         phone: phone,
         address: address,
         cart: this.cart,
-        total: this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        total: this.cart.reduce((sum, item) => {
+          const effectivePrice = item.promotion > 0 ? item.price * (1 - item.promotion / 100) : item.price;
+          return sum + (effectivePrice * item.quantity);
+        }, 0)
       };
 
       // Save order to Firebase
@@ -968,6 +1014,16 @@ class EcommerceApp {
                 <input type="checkbox" id="product-instock" class="checkbox checkbox-primary" checked />
               </div>
 
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Promotion (%)</span>
+                </label>
+                <input type="number" id="product-promotion" class="input input-bordered" step="1" min="0" max="100" placeholder="0" />
+                <label class="label">
+                  <span class="label-text-alt">Enter discount percentage (0-100). Leave 0 for no promotion.</span>
+                </label>
+              </div>
+
               <div class="form-control md:col-span-2">
                 <label class="label">
                   <span class="label-text font-semibold">Description *</span>
@@ -1019,6 +1075,7 @@ class EcommerceApp {
                   <th>Name</th>
                   <th>Category</th>
                   <th>Price</th>
+                  <th>Promotion</th>
                   <th>Stock</th>
                   <th>Actions</th>
                 </tr>
@@ -1039,6 +1096,11 @@ class EcommerceApp {
                     </td>
                     <td><span class="badge badge-primary">${product.category}</span></td>
                     <td class="font-bold">₨${product.price.toFixed(2)}</td>
+                    <td>
+                      ${product.promotion > 0 ? 
+                        `<span class="badge badge-error">-${product.promotion}%</span>` : 
+                        '<span class="badge badge-ghost">None</span>'}
+                    </td>
                     <td>
                       ${product.inStock ? 
                         '<span class="badge badge-success">In Stock</span>' : 
@@ -1407,11 +1469,19 @@ class EcommerceApp {
                           </div>
                         </div>
                         <span class="font-semibold">${item.name}</span>
+                        ${item.promotion > 0 ? `<span class="badge badge-error badge-sm">-${item.promotion}%</span>` : ''}
                       </div>
                     </td>
-                    <td>₨${(item.price || 0).toFixed(2)}</td>
+                    <td>
+                      ${item.promotion > 0 ? `
+                        <div>
+                          <span class="text-sm line-through text-gray-500">₨${(item.price || 0).toFixed(2)}</span>
+                          <span class="font-semibold text-primary ml-1">₨${((item.price || 0) * (1 - (item.promotion || 0) / 100)).toFixed(2)}</span>
+                        </div>
+                      ` : `₨${(item.price || 0).toFixed(2)}`}
+                    </td>
                     <td>${item.quantity || 1}</td>
-                    <td class="font-bold">₨${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
+                    <td class="font-bold">₨${(((item.price || 0) * (1 - (item.promotion || 0) / 100)) * (item.quantity || 1)).toFixed(2)}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -1555,14 +1625,17 @@ class EcommerceApp {
               </tr>
             </thead>
             <tbody>
-              ${(order.items || []).map(item => `
+              ${(order.items || []).map(item => {
+                const effectivePrice = (item.promotion > 0) ? (item.price || 0) * (1 - (item.promotion || 0) / 100) : (item.price || 0);
+                return `
                 <tr>
-                  <td>${item.name}</td>
-                  <td class="text-right">₨${(item.price || 0).toFixed(2)}</td>
+                  <td>${item.name}${item.promotion > 0 ? ` (-${item.promotion}%)` : ''}</td>
+                  <td class="text-right">₨${effectivePrice.toFixed(2)}</td>
                   <td class="text-right">${item.quantity || 1}</td>
-                  <td class="text-right">₨${((item.price || 0) * (item.quantity || 1)).toFixed(2)}</td>
+                  <td class="text-right">₨${(effectivePrice * (item.quantity || 1)).toFixed(2)}</td>
                 </tr>
-              `).join('')}
+              `;
+              }).join('')}
             </tbody>
             <tfoot>
               <tr class="total-row">
@@ -1667,7 +1740,8 @@ class EcommerceApp {
       price: parseFloat(document.getElementById('product-price').value),
       description: document.getElementById('product-description').value.trim(),
       image: document.getElementById('product-image-url')?.value?.trim() || '',
-      inStock: document.getElementById('product-instock').checked
+      inStock: document.getElementById('product-instock').checked,
+      promotion: parseInt(document.getElementById('product-promotion').value) || 0
     };
     
     try {
@@ -1736,6 +1810,7 @@ class EcommerceApp {
     document.getElementById('product-description').value = product.description;
     document.getElementById('product-image-url').value = product.image || '';
     document.getElementById('product-instock').checked = product.inStock;
+    document.getElementById('product-promotion').value = product.promotion || 0;
     
     // Show URL input by default
     this.switchImageInput('url');
