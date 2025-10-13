@@ -59,6 +59,31 @@
         .category-bar {
             transition: width 0.5s ease-in-out;
         }
+        
+        /* Mobile-specific improvements for admin dashboard */
+        @media (max-width: 768px) {
+            .modal-box {
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+            
+            /* Better table scrolling on mobile */
+            .overflow-x-auto {
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Ensure tabs wrap better */
+            .tabs {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .tab {
+                white-space: nowrap;
+                flex-shrink: 0;
+            }
+        }
     </style>
 </head>
 <body class="bg-base-200">
@@ -122,11 +147,11 @@
 
     <!-- Admin Dashboard Modal -->
     <div id="admin-dashboard-modal" class="modal">
-        <div class="modal-box w-11/12 max-w-7xl">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="font-bold text-3xl">Admin Dashboard</h3>
-                <button class="btn btn-ghost btn-circle" onclick="app.closeAdminDashboard()">
-                    <i class="fas fa-times text-xl"></i>
+        <div class="modal-box w-11/12 max-w-7xl p-4 md:p-6">
+            <div class="flex justify-between items-center mb-4 md:mb-6">
+                <h3 class="font-bold text-xl md:text-3xl">Admin Dashboard</h3>
+                <button class="btn btn-ghost btn-circle btn-sm md:btn-md" onclick="app.closeAdminDashboard()">
+                    <i class="fas fa-times text-lg md:text-xl"></i>
                 </button>
             </div>
             <div id="dashboard-content">
