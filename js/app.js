@@ -793,6 +793,7 @@ class EcommerceApp {
       <div role="tablist" class="tabs tabs-boxed mb-6">
         <a role="tab" class="tab tab-active" onclick="app.switchDashboardTab('stats')">Statistics</a>
         <a role="tab" class="tab" onclick="app.switchDashboardTab('products')">Product Management</a>
+        <a role="tab" class="tab" onclick="app.switchDashboardTab('categories')">Categories</a>
         <a role="tab" class="tab" onclick="app.switchDashboardTab('orders')">Orders</a>
       </div>
 
@@ -1123,6 +1124,73 @@ class EcommerceApp {
                 `).join('')}
               </tbody>
             </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categories Management Tab -->
+      <div id="categories-tab" class="dashboard-tab hidden">
+        <div class="mb-6 flex justify-between items-center">
+          <h4 class="text-2xl font-bold">Category Management</h4>
+          <button class="btn btn-primary" onclick="app.showAddCategoryForm()">
+            <i class="fas fa-plus mr-2"></i>
+            Add New Category
+          </button>
+        </div>
+
+        <!-- Add/Edit Category Form -->
+        <div id="category-form-container" class="hidden mb-6">
+          <div class="bg-base-100 rounded-lg shadow-lg p-6">
+            <h5 class="text-xl font-bold mb-4" id="category-form-title">Add New Category</h5>
+            <form id="category-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="hidden" id="category-old-name" />
+              
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Category Name *</span>
+                </label>
+                <input type="text" id="category-name" class="input input-bordered" required placeholder="e.g., Featured, New, Black Friday" />
+              </div>
+
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-semibold">Display Color</span>
+                </label>
+                <div class="flex gap-2">
+                  <input type="color" id="category-color" class="w-16 h-12 border-2 border-base-300 rounded cursor-pointer" value="#3b82f6" />
+                  <input type="text" id="category-color-hex" class="input input-bordered flex-1" placeholder="#3b82f6" value="#3b82f6" />
+                </div>
+                <label class="label">
+                  <span class="label-text-alt">Color for category badges and highlights</span>
+                </label>
+              </div>
+
+              <div class="form-control md:col-span-2">
+                <label class="label">
+                  <span class="label-text font-semibold">Description</span>
+                </label>
+                <textarea id="category-description" class="textarea textarea-bordered h-20" placeholder="Optional description for this category"></textarea>
+              </div>
+
+              <div class="form-control md:col-span-2">
+                <div class="flex gap-2">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-2"></i>
+                    Save Category
+                  </button>
+                  <button type="button" class="btn btn-ghost" onclick="app.cancelCategoryForm()">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Categories List -->
+        <div id="categories-list-container">
+          <div class="flex justify-center py-12">
+            <span class="loading loading-spinner loading-lg"></span>
           </div>
         </div>
       </div>
@@ -1665,26 +1733,31 @@ class EcommerceApp {
   switchDashboardTab(tabName) {
     const statsTab = document.getElementById('stats-tab');
     const productsTab = document.getElementById('products-tab');
+    const categoriesTab = document.getElementById('categories-tab');
     const ordersTab = document.getElementById('orders-tab');
     const tabs = document.querySelectorAll('#dashboard-content .tab');
     
     tabs.forEach(tab => tab.classList.remove('tab-active'));
     
+    // Hide all tabs
+    [statsTab, productsTab, categoriesTab, ordersTab].forEach(tab => {
+      if (tab) tab.classList.add('hidden');
+    });
+    
     if (tabName === 'stats') {
       statsTab.classList.remove('hidden');
-      productsTab.classList.add('hidden');
-      ordersTab.classList.add('hidden');
       tabs[0].classList.add('tab-active');
     } else if (tabName === 'products') {
-      statsTab.classList.add('hidden');
       productsTab.classList.remove('hidden');
-      ordersTab.classList.add('hidden');
       tabs[1].classList.add('tab-active');
-    } else if (tabName === 'orders') {
-      statsTab.classList.add('hidden');
-      productsTab.classList.add('hidden');
-      ordersTab.classList.remove('hidden');
+    } else if (tabName === 'categories') {
+      categoriesTab.classList.remove('hidden');
       tabs[2].classList.add('tab-active');
+      // Load categories when tab is opened
+      this.loadCategoriesTab();
+    } else if (tabName === 'orders') {
+      ordersTab.classList.remove('hidden');
+      tabs[3].classList.add('tab-active');
     }
   }
 
@@ -1850,6 +1923,347 @@ class EcommerceApp {
         console.error('Error deleting product:', error);
         this.showNotification('Error deleting product. Please try again.', 'error');
       }
+    }
+  }
+
+  // ==================== CATEGORY MANAGEMENT METHODS ====================
+
+  async loadCategoriesTab() {
+    const listContainer = document.getElementById('categories-list-container');
+    if (!listContainer) return;
+
+    try {
+      const categories = await firebaseService.getCategories();
+      const metadata = await firebaseService.getCategoryMetadata();
+      
+      await this.renderCategoriesList(categories, metadata);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      listContainer.innerHTML = `
+        <div class="alert alert-error">
+          <i class="fas fa-exclamation-circle mr-2"></i>
+          <span>Failed to load categories. Please try again.</span>
+        </div>
+      `;
+    }
+  }
+
+  async renderCategoriesList(categories, metadata) {
+    const listContainer = document.getElementById('categories-list-container');
+    if (!listContainer) return;
+
+    const categoriesWithMeta = categories
+      .filter(cat => cat !== 'All') // Don't show 'All' category
+      .map(cat => ({
+        name: cat,
+        color: metadata[cat]?.color || '#3b82f6',
+        description: metadata[cat]?.description || '',
+        productCount: this.products.filter(p => p.category === cat).length
+      }));
+
+    if (categoriesWithMeta.length === 0) {
+      listContainer.innerHTML = `
+        <div class="alert alert-info">
+          <i class="fas fa-info-circle mr-2"></i>
+          <span>No categories yet. Click "Add New Category" to create one.</span>
+        </div>
+      `;
+      return;
+    }
+
+    listContainer.innerHTML = `
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        ${categoriesWithMeta.map(cat => `
+          <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+            <div class="card-body">
+              <div class="flex justify-between items-start mb-3">
+                <div class="flex items-center gap-3 flex-1">
+                  <div class="w-8 h-8 rounded-full" style="background-color: ${cat.color}"></div>
+                  <h3 class="card-title text-lg">${cat.name}</h3>
+                </div>
+                <div class="badge badge-primary badge-lg">${cat.productCount}</div>
+              </div>
+              
+              ${cat.description ? `
+                <p class="text-sm text-base-content opacity-70 mb-3">${cat.description}</p>
+              ` : ''}
+              
+              <div class="card-actions justify-between items-center mt-4">
+                <button class="btn btn-sm btn-ghost" onclick="app.manageProductsInCategory('${cat.name}')">
+                  <i class="fas fa-box mr-1"></i>
+                  Manage Products
+                </button>
+                <div class="flex gap-2">
+                  <button class="btn btn-sm btn-ghost" onclick="app.editCategory('${cat.name}')">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-sm btn-ghost text-error" onclick="app.deleteCategory('${cat.name}')">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  showAddCategoryForm() {
+    const formContainer = document.getElementById('category-form-container');
+    const formTitle = document.getElementById('category-form-title');
+    const form = document.getElementById('category-form');
+    
+    if (formContainer && formTitle && form) {
+      formTitle.textContent = 'Add New Category';
+      form.reset();
+      document.getElementById('category-old-name').value = '';
+      document.getElementById('category-color').value = '#3b82f6';
+      document.getElementById('category-color-hex').value = '#3b82f6';
+      formContainer.classList.remove('hidden');
+      
+      // Setup color picker sync
+      this.setupColorPickerSync();
+      
+      // Setup form submission
+      form.onsubmit = (e) => this.handleCategoryFormSubmit(e);
+    }
+  }
+
+  cancelCategoryForm() {
+    const formContainer = document.getElementById('category-form-container');
+    if (formContainer) {
+      formContainer.classList.add('hidden');
+    }
+  }
+
+  setupColorPickerSync() {
+    const colorPicker = document.getElementById('category-color');
+    const colorHex = document.getElementById('category-color-hex');
+    
+    if (colorPicker && colorHex) {
+      colorPicker.addEventListener('input', (e) => {
+        colorHex.value = e.target.value;
+      });
+      
+      colorHex.addEventListener('input', (e) => {
+        const hex = e.target.value;
+        if (/^#[0-9A-F]{6}$/i.test(hex)) {
+          colorPicker.value = hex;
+        }
+      });
+    }
+  }
+
+  async handleCategoryFormSubmit(e) {
+    e.preventDefault();
+    
+    const oldName = document.getElementById('category-old-name').value;
+    const name = document.getElementById('category-name').value.trim();
+    const color = document.getElementById('category-color').value;
+    const description = document.getElementById('category-description').value.trim();
+    
+    if (!name) {
+      this.showNotification('Please enter a category name', 'error');
+      return;
+    }
+    
+    try {
+      const metadata = { color, description };
+      
+      if (oldName && oldName !== name) {
+        // Update existing category
+        await firebaseService.updateCategory(oldName, name, metadata);
+        this.showNotification('Category updated successfully!', 'success');
+      } else if (oldName === name) {
+        // Just update metadata
+        await firebaseService.saveCategoryMetadata(name, metadata);
+        this.showNotification('Category updated successfully!', 'success');
+      } else {
+        // Add new category
+        await firebaseService.addCategory(name, metadata);
+        this.showNotification('Category added successfully!', 'success');
+      }
+      
+      this.cancelCategoryForm();
+      
+      // Reload categories
+      if (this.firebaseInitialized) {
+        this.categories = await firebaseService.getCategories();
+      }
+      
+      this.loadCategoriesTab();
+      this.renderDashboard();
+      this.renderCategories();
+    } catch (error) {
+      console.error('Error saving category:', error);
+      this.showNotification('Error saving category. Please try again.', 'error');
+    }
+  }
+
+  async editCategory(categoryName) {
+    const formContainer = document.getElementById('category-form-container');
+    const formTitle = document.getElementById('category-form-title');
+    const form = document.getElementById('category-form');
+    
+    if (formContainer && formTitle && form) {
+      try {
+        const metadata = await firebaseService.getCategoryMetadata();
+        const catMeta = metadata[categoryName] || {};
+        
+        formTitle.textContent = 'Edit Category';
+        document.getElementById('category-old-name').value = categoryName;
+        document.getElementById('category-name').value = categoryName;
+        document.getElementById('category-color').value = catMeta.color || '#3b82f6';
+        document.getElementById('category-color-hex').value = catMeta.color || '#3b82f6';
+        document.getElementById('category-description').value = catMeta.description || '';
+        
+        formContainer.classList.remove('hidden');
+        
+        // Setup color picker sync
+        this.setupColorPickerSync();
+        
+        // Setup form submission
+        form.onsubmit = (e) => this.handleCategoryFormSubmit(e);
+      } catch (error) {
+        console.error('Error loading category for edit:', error);
+        this.showNotification('Error loading category. Please try again.', 'error');
+      }
+    }
+  }
+
+  async deleteCategory(categoryName) {
+    const productsInCategory = this.products.filter(p => p.category === categoryName).length;
+    
+    if (productsInCategory > 0) {
+      const confirmMsg = `This category has ${productsInCategory} product(s). Deleting it will remove the category from all products. Continue?`;
+      if (!confirm(confirmMsg)) return;
+    } else {
+      if (!confirm(`Are you sure you want to delete the "${categoryName}" category?`)) return;
+    }
+    
+    try {
+      await firebaseService.deleteCategory(categoryName);
+      this.showNotification('Category deleted successfully!', 'success');
+      
+      // Reload categories
+      if (this.firebaseInitialized) {
+        this.categories = await firebaseService.getCategories();
+        
+        // Update products that had this category
+        const productsToUpdate = this.products.filter(p => p.category === categoryName);
+        for (const product of productsToUpdate) {
+          await firebaseService.updateProduct(product.id, { ...product, category: 'Electronics' });
+        }
+        
+        await this.loadProducts();
+      }
+      
+      this.loadCategoriesTab();
+      this.renderDashboard();
+      this.renderCategories();
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      this.showNotification('Error deleting category. Please try again.', 'error');
+    }
+  }
+
+  async manageProductsInCategory(categoryName) {
+    const modal = document.createElement('div');
+    modal.className = 'modal modal-open';
+    modal.innerHTML = `
+      <div class="modal-box w-11/12 max-w-4xl">
+        <h3 class="font-bold text-2xl mb-4">Manage Products in "${categoryName}"</h3>
+        <p class="text-sm text-base-content opacity-70 mb-4">
+          Select products to add to this category, or uncheck to remove them.
+        </p>
+        
+        <div id="category-products-list" class="max-h-96 overflow-y-auto">
+          <div class="flex justify-center py-8">
+            <span class="loading loading-spinner loading-lg"></span>
+          </div>
+        </div>
+        
+        <div class="modal-action">
+          <button class="btn btn-primary" onclick="app.saveCategoryProducts('${categoryName}')">
+            <i class="fas fa-save mr-2"></i>
+            Save Changes
+          </button>
+          <button class="btn btn-ghost" onclick="this.closest('.modal').remove()">Close</button>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Load products list
+    const productsList = modal.querySelector('#category-products-list');
+    const productsHtml = this.products.map(product => {
+      const isInCategory = product.category === categoryName;
+      return `
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-4 hover:bg-base-200 rounded-lg p-3">
+            <input type="checkbox" 
+                   class="checkbox checkbox-primary" 
+                   data-product-id="${product.id}"
+                   ${isInCategory ? 'checked' : ''} />
+            <div class="flex items-center gap-3 flex-1">
+              <img src="${product.image}" alt="${product.name}" class="w-12 h-12 object-cover rounded" />
+              <div class="flex-1">
+                <span class="label-text font-semibold">${product.name}</span>
+                <div class="text-xs opacity-70">Current: ${product.category}</div>
+              </div>
+              <span class="badge badge-ghost">₨${product.price.toFixed(2)}</span>
+            </div>
+          </label>
+        </div>
+      `;
+    }).join('');
+    
+    productsList.innerHTML = productsHtml;
+  }
+
+  async saveCategoryProducts(categoryName) {
+    const modal = document.querySelector('.modal-open');
+    const checkboxes = modal.querySelectorAll('input[type="checkbox"]');
+    
+    try {
+      const updates = [];
+      
+      checkboxes.forEach(checkbox => {
+        const productId = checkbox.getAttribute('data-product-id');
+        const product = this.products.find(p => p.id === productId);
+        
+        if (product) {
+          const shouldBeInCategory = checkbox.checked;
+          const isInCategory = product.category === categoryName;
+          
+          if (shouldBeInCategory && !isInCategory) {
+            // Add to category
+            updates.push(firebaseService.updateProduct(productId, { ...product, category: categoryName }));
+          } else if (!shouldBeInCategory && isInCategory) {
+            // Remove from category (set to default)
+            updates.push(firebaseService.updateProduct(productId, { ...product, category: 'Electronics' }));
+          }
+        }
+      });
+      
+      if (updates.length > 0) {
+        await Promise.all(updates);
+        this.showNotification('Products updated successfully!', 'success');
+        
+        // Reload data
+        await this.loadProducts();
+        this.loadCategoriesTab();
+        this.renderDashboard();
+        this.renderCategories();
+        this.renderProducts();
+      }
+      
+      modal.remove();
+    } catch (error) {
+      console.error('Error updating products:', error);
+      this.showNotification('Error updating products. Please try again.', 'error');
     }
   }
 }
