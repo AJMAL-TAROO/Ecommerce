@@ -200,6 +200,115 @@ class FirebaseService {
     }
   }
 
+  // Get category metadata (enhanced categories with color, description, etc.)
+  async getCategoryMetadata() {
+    try {
+      const snapshot = await this.database.ref('categoryMetadata').once('value');
+      return snapshot.val() || {};
+    } catch (error) {
+      console.error('Error fetching category metadata:', error);
+      return {};
+    }
+  }
+
+  // Save category metadata
+  async saveCategoryMetadata(categoryId, metadata) {
+    try {
+      await this.database.ref(`categoryMetadata/${categoryId}`).set({
+        ...metadata,
+        updatedAt: firebase.database.ServerValue.TIMESTAMP
+      });
+      return metadata;
+    } catch (error) {
+      console.error('Error saving category metadata:', error);
+      throw error;
+    }
+  }
+
+  // Delete category metadata
+  async deleteCategoryMetadata(categoryId) {
+    try {
+      await this.database.ref(`categoryMetadata/${categoryId}`).remove();
+    } catch (error) {
+      console.error('Error deleting category metadata:', error);
+      throw error;
+    }
+  }
+
+  // Add new category
+  async addCategory(categoryName, metadata = {}) {
+    try {
+      const categories = await this.getCategories();
+      if (!categories.includes(categoryName)) {
+        categories.push(categoryName);
+        await this.updateCategories(categories);
+      }
+      
+      // Save metadata if provided
+      if (metadata && Object.keys(metadata).length > 0) {
+        await this.saveCategoryMetadata(categoryName, metadata);
+      }
+      
+      return categoryName;
+    } catch (error) {
+      console.error('Error adding category:', error);
+      throw error;
+    }
+  }
+
+  // Delete category
+  async deleteCategory(categoryName) {
+    try {
+      const categories = await this.getCategories();
+      const filteredCategories = categories.filter(cat => cat !== categoryName && cat !== 'All');
+      
+      // Always keep 'All' category
+      if (!filteredCategories.includes('All')) {
+        filteredCategories.unshift('All');
+      }
+      
+      await this.updateCategories(filteredCategories);
+      await this.deleteCategoryMetadata(categoryName);
+      
+      return filteredCategories;
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      throw error;
+    }
+  }
+
+  // Update category (rename)
+  async updateCategory(oldName, newName, metadata = {}) {
+    try {
+      const categories = await this.getCategories();
+      const index = categories.indexOf(oldName);
+      
+      if (index !== -1) {
+        categories[index] = newName;
+        await this.updateCategories(categories);
+      }
+      
+      // Update metadata
+      if (oldName !== newName) {
+        await this.deleteCategoryMetadata(oldName);
+      }
+      await this.saveCategoryMetadata(newName, metadata);
+      
+      // Update all products with the old category
+      const products = await this.getProducts();
+      for (const product of products) {
+        if (product.category === oldName) {
+          await this.updateProduct(product.id, { ...product, category: newName });
+        }
+      }
+      
+      return newName;
+    } catch (error) {
+      console.error('Error updating category:', error);
+      throw error;
+    }
+  }
+
   // ==================== ORDERS/PAYMENTS OPERATIONS ====================
 
   // Save order/payment details
