@@ -543,6 +543,12 @@ class EcommerceApp {
       return;
     }
     
+    // Get submit button and disable it to prevent multiple submissions
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    const originalBtnContent = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+    
     try {
       // Show loading notification
       this.showNotification('Processing your order...', 'info');
@@ -560,9 +566,14 @@ class EcommerceApp {
         }, 0)
       };
 
-      // Save order to Firebase
+      // Save order to Firebase with overall timeout (45 seconds)
+      let result = null;
       if (this.firebaseInitialized) {
-        await firebaseService.saveOrder(orderData);
+        const savePromise = firebaseService.saveOrder(orderData);
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Order submission timeout. Please check your internet connection and try again.')), 45000);
+        });
+        result = await Promise.race([savePromise, timeoutPromise]);
       } else {
         // Fallback: log to console if Firebase not available
         console.log('Order Details (Firebase not available):', orderData);
@@ -574,10 +585,18 @@ class EcommerceApp {
       this.closeCheckoutModal();
       this.toggleCart();
       
-      this.showNotification('Order placed successfully! We will contact you shortly for delivery.', 'success');
+      // Show appropriate success message
+      if (result && result.uploadError) {
+        this.showNotification('Order placed successfully! Note: Payment screenshot upload failed - please contact us with your payment proof.', 'warning');
+      } else {
+        this.showNotification('Order placed successfully! We will contact you shortly for delivery.', 'success');
+      }
     } catch (error) {
       console.error('Error processing order:', error);
       this.showNotification('Error processing order. Please try again.', 'error');
+      // Re-enable submit button on error
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnContent;
     }
   }
 

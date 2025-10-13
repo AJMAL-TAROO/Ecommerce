@@ -319,8 +319,15 @@ class FirebaseService {
 
       // Upload payment screenshot to Firebase Storage
       let screenshotUrl = null;
+      let uploadError = null;
       if (orderData.screenshot) {
-        screenshotUrl = await this.uploadPaymentScreenshot(orderData.screenshot);
+        try {
+          screenshotUrl = await this.uploadPaymentScreenshot(orderData.screenshot);
+        } catch (uploadErr) {
+          console.error('Failed to upload payment screenshot, saving order without it:', uploadErr);
+          uploadError = uploadErr.message || 'Screenshot upload failed';
+          // Continue to save order even if screenshot upload fails
+        }
       }
 
       const order = {
@@ -331,13 +338,14 @@ class FirebaseService {
         items: orderData.cart,
         totalAmount: orderData.total,
         paymentScreenshot: screenshotUrl,
+        screenshotUploadError: uploadError,
         status: 'pending',
         createdAt: firebase.database.ServerValue.TIMESTAMP
       };
 
       await orderRef.set(order);
       
-      return { id: orderId, ...order };
+      return { id: orderId, ...order, uploadError };
     } catch (error) {
       console.error('Error saving order:', error);
       throw error;
@@ -386,8 +394,26 @@ class FirebaseService {
       const fileName = `payments/${timestamp}_${file.name}`;
       const storageRef = this.storage.ref(fileName);
       
-      // Upload file
-      const snapshot = await storageRef.put(file);
+      // Create upload task
+      const uploadTask = storageRef.put(file);
+      
+      // Add timeout to prevent indefinite hanging (30 seconds)
+      const uploadPromise = new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          uploadTask.cancel();
+          reject(new Error('Upload timeout: Payment screenshot upload took too long'));
+        }, 30000);
+        
+        uploadTask.then(snapshot => {
+          clearTimeout(timeout);
+          resolve(snapshot);
+        }).catch(error => {
+          clearTimeout(timeout);
+          reject(error);
+        });
+      });
+      
+      const snapshot = await uploadPromise;
       
       // Get download URL
       const downloadURL = await snapshot.ref.getDownloadURL();
