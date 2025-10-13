@@ -809,9 +809,9 @@ class EcommerceApp {
 
     dashboardContent.innerHTML = `
       <!-- Tab Navigation -->
-      <div role="tablist" class="tabs tabs-boxed mb-6">
+      <div role="tablist" class="tabs tabs-boxed mb-4 md:mb-6 text-xs md:text-sm overflow-x-auto">
         <a role="tab" class="tab tab-active" onclick="app.switchDashboardTab('stats')">Statistics</a>
-        <a role="tab" class="tab" onclick="app.switchDashboardTab('products')">Product Management</a>
+        <a role="tab" class="tab" onclick="app.switchDashboardTab('products')">Products</a>
         <a role="tab" class="tab" onclick="app.switchDashboardTab('categories')">Categories</a>
         <a role="tab" class="tab" onclick="app.switchDashboardTab('orders')">Orders</a>
       </div>
@@ -819,50 +819,50 @@ class EcommerceApp {
       <!-- Statistics Tab -->
       <div id="stats-tab" class="dashboard-tab">
       <!-- Summary Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-6">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8">
+        <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-4 md:p-6">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm opacity-80">Total Products</p>
-              <h3 class="text-4xl font-bold mt-2">${stats.totalProducts}</h3>
+              <p class="text-xs md:text-sm opacity-80">Total Products</p>
+              <h3 class="text-2xl md:text-4xl font-bold mt-1 md:mt-2">${stats.totalProducts}</h3>
             </div>
-            <div class="text-5xl opacity-80">
+            <div class="text-3xl md:text-5xl opacity-80">
               <i class="fas fa-box"></i>
             </div>
           </div>
         </div>
 
-        <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow-lg p-6">
+        <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow-lg p-4 md:p-6">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm opacity-80">In Stock</p>
-              <h3 class="text-4xl font-bold mt-2">${stats.inStockCount}</h3>
+              <p class="text-xs md:text-sm opacity-80">In Stock</p>
+              <h3 class="text-2xl md:text-4xl font-bold mt-1 md:mt-2">${stats.inStockCount}</h3>
             </div>
-            <div class="text-5xl opacity-80">
+            <div class="text-3xl md:text-5xl opacity-80">
               <i class="fas fa-check-circle"></i>
             </div>
           </div>
         </div>
 
-        <div class="stat-card bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg shadow-lg p-6">
+        <div class="stat-card bg-gradient-to-br from-red-500 to-red-600 text-white rounded-lg shadow-lg p-4 md:p-6">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm opacity-80">Out of Stock</p>
-              <h3 class="text-4xl font-bold mt-2">${stats.outOfStockCount}</h3>
+              <p class="text-xs md:text-sm opacity-80">Out of Stock</p>
+              <h3 class="text-2xl md:text-4xl font-bold mt-1 md:mt-2">${stats.outOfStockCount}</h3>
             </div>
-            <div class="text-5xl opacity-80">
+            <div class="text-3xl md:text-5xl opacity-80">
               <i class="fas fa-times-circle"></i>
             </div>
           </div>
         </div>
 
-        <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow-lg p-6">
+        <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow-lg p-4 md:p-6">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm opacity-80">Avg. Price</p>
-              <h3 class="text-4xl font-bold mt-2">₨${stats.averagePrice.toFixed(0)}</h3>
+              <p class="text-xs md:text-sm opacity-80">Avg. Price</p>
+              <h3 class="text-2xl md:text-4xl font-bold mt-1 md:mt-2">₨${stats.averagePrice.toFixed(0)}</h3>
             </div>
-            <div class="text-5xl opacity-80">
+            <div class="text-3xl md:text-5xl opacity-80">
               <i class="fas fa-rupee-sign"></i>
             </div>
           </div>
@@ -870,14 +870,14 @@ class EcommerceApp {
       </div>
 
       <!-- Category Breakdown -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
         <!-- Products per Category -->
-        <div class="bg-base-100 rounded-lg shadow-lg p-6">
-          <h4 class="text-2xl font-bold mb-6 flex items-center">
-            <i class="fas fa-chart-bar mr-3 text-primary"></i>
+        <div class="bg-base-100 rounded-lg shadow-lg p-4 md:p-6">
+          <h4 class="text-lg md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
+            <i class="fas fa-chart-bar mr-2 md:mr-3 text-primary"></i>
             Products per Category
           </h4>
-          <div class="space-y-4">
+          <div class="space-y-3 md:space-y-4">
             ${categories.map(category => {
               const catStats = stats.categoryStats[category];
               const percentage = (catStats.count / stats.totalProducts * 100).toFixed(1);
@@ -886,15 +886,15 @@ class EcommerceApp {
               return `
                 <div class="space-y-2">
                   <div class="flex justify-between items-center">
-                    <span class="font-semibold text-lg">${category}</span>
-                    <span class="badge badge-primary badge-lg">${catStats.count} items</span>
+                    <span class="font-semibold text-sm md:text-lg">${category}</span>
+                    <span class="badge badge-primary text-xs md:badge-lg">${catStats.count} items</span>
                   </div>
-                  <div class="flex items-center gap-3">
-                    <div class="flex-1 bg-base-300 rounded-full h-4 overflow-hidden">
+                  <div class="flex items-center gap-2 md:gap-3">
+                    <div class="flex-1 bg-base-300 rounded-full h-3 md:h-4 overflow-hidden">
                       <div class="category-bar bg-gradient-to-r from-primary to-secondary h-full rounded-full" 
                            style="width: ${barWidth}%"></div>
                     </div>
-                    <span class="text-sm font-semibold w-12">${percentage}%</span>
+                    <span class="text-xs md:text-sm font-semibold w-10 md:w-12">${percentage}%</span>
                   </div>
                 </div>
               `;
@@ -903,13 +903,13 @@ class EcommerceApp {
         </div>
 
         <!-- Category Details Table -->
-        <div class="bg-base-100 rounded-lg shadow-lg p-6">
-          <h4 class="text-2xl font-bold mb-6 flex items-center">
-            <i class="fas fa-list mr-3 text-primary"></i>
+        <div class="bg-base-100 rounded-lg shadow-lg p-4 md:p-6">
+          <h4 class="text-lg md:text-2xl font-bold mb-4 md:mb-6 flex items-center">
+            <i class="fas fa-list mr-2 md:mr-3 text-primary"></i>
             Category Details
           </h4>
           <div class="overflow-x-auto">
-            <table class="table table-zebra w-full">
+            <table class="table table-zebra w-full text-xs md:text-base">
               <thead>
                 <tr>
                   <th>Category</th>
@@ -924,17 +924,17 @@ class EcommerceApp {
                   const catStats = stats.categoryStats[category];
                   return `
                     <tr>
-                      <td class="font-semibold">${category}</td>
+                      <td class="font-semibold text-xs md:text-base">${category}</td>
                       <td class="text-center">
-                        <span class="badge badge-neutral">${catStats.count}</span>
+                        <span class="badge badge-neutral badge-sm md:badge-md">${catStats.count}</span>
                       </td>
                       <td class="text-center">
-                        <span class="badge badge-success">${catStats.inStock}</span>
+                        <span class="badge badge-success badge-sm md:badge-md">${catStats.inStock}</span>
                       </td>
                       <td class="text-center">
-                        <span class="badge badge-error">${catStats.outOfStock}</span>
+                        <span class="badge badge-error badge-sm md:badge-md">${catStats.outOfStock}</span>
                       </td>
-                      <td class="text-right font-bold text-primary">
+                      <td class="text-right font-bold text-primary text-xs md:text-base">
                         ₨${catStats.totalValue.toFixed(2)}
                       </td>
                     </tr>
@@ -942,18 +942,18 @@ class EcommerceApp {
                 }).join('')}
               </tbody>
               <tfoot>
-                <tr class="font-bold">
+                <tr class="font-bold text-xs md:text-base">
                   <td>Total</td>
                   <td class="text-center">
-                    <span class="badge badge-primary badge-lg">${stats.totalProducts}</span>
+                    <span class="badge badge-primary badge-sm md:badge-lg">${stats.totalProducts}</span>
                   </td>
                   <td class="text-center">
-                    <span class="badge badge-success badge-lg">${stats.inStockCount}</span>
+                    <span class="badge badge-success badge-sm md:badge-lg">${stats.inStockCount}</span>
                   </td>
                   <td class="text-center">
-                    <span class="badge badge-error badge-lg">${stats.outOfStockCount}</span>
+                    <span class="badge badge-error badge-sm md:badge-lg">${stats.outOfStockCount}</span>
                   </td>
-                  <td class="text-right text-primary text-lg">
+                  <td class="text-right text-primary text-sm md:text-lg">
                     ₨${stats.totalValue.toFixed(2)}
                   </td>
                 </tr>
@@ -964,23 +964,23 @@ class EcommerceApp {
       </div>
 
       <!-- Additional Insights -->
-      <div class="bg-gradient-to-br from-base-100 to-base-200 rounded-lg shadow-lg p-6 mt-6">
-        <h4 class="text-2xl font-bold mb-4 flex items-center">
-          <i class="fas fa-lightbulb mr-3 text-warning"></i>
+      <div class="bg-gradient-to-br from-base-100 to-base-200 rounded-lg shadow-lg p-4 md:p-6 mt-4 md:mt-6">
+        <h4 class="text-lg md:text-2xl font-bold mb-3 md:mb-4 flex items-center">
+          <i class="fas fa-lightbulb mr-2 md:mr-3 text-warning"></i>
           Quick Insights
         </h4>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="bg-base-100 rounded-lg p-4 border-l-4 border-primary">
-            <p class="text-sm text-gray-600">Total Inventory Value</p>
-            <p class="text-2xl font-bold text-primary">₨${stats.totalValue.toFixed(2)}</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+          <div class="bg-base-100 rounded-lg p-3 md:p-4 border-l-4 border-primary">
+            <p class="text-xs md:text-sm text-gray-600">Total Inventory Value</p>
+            <p class="text-lg md:text-2xl font-bold text-primary">₨${stats.totalValue.toFixed(2)}</p>
           </div>
-          <div class="bg-base-100 rounded-lg p-4 border-l-4 border-success">
-            <p class="text-sm text-gray-600">Stock Availability</p>
-            <p class="text-2xl font-bold text-success">${((stats.inStockCount / stats.totalProducts) * 100).toFixed(1)}%</p>
+          <div class="bg-base-100 rounded-lg p-3 md:p-4 border-l-4 border-success">
+            <p class="text-xs md:text-sm text-gray-600">Stock Availability</p>
+            <p class="text-lg md:text-2xl font-bold text-success">${((stats.inStockCount / stats.totalProducts) * 100).toFixed(1)}%</p>
           </div>
-          <div class="bg-base-100 rounded-lg p-4 border-l-4 border-warning">
-            <p class="text-sm text-gray-600">Categories</p>
-            <p class="text-2xl font-bold text-warning">${categories.length}</p>
+          <div class="bg-base-100 rounded-lg p-3 md:p-4 border-l-4 border-warning">
+            <p class="text-xs md:text-sm text-gray-600">Categories</p>
+            <p class="text-lg md:text-2xl font-bold text-warning">${categories.length}</p>
           </div>
         </div>
       </div>
@@ -988,33 +988,33 @@ class EcommerceApp {
 
       <!-- Product Management Tab -->
       <div id="products-tab" class="dashboard-tab hidden">
-        <div class="mb-6 flex justify-between items-center">
-          <h4 class="text-2xl font-bold">Product Management</h4>
-          <button class="btn btn-primary" onclick="app.showAddProductForm()">
+        <div class="mb-4 md:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <h4 class="text-lg md:text-2xl font-bold">Product Management</h4>
+          <button class="btn btn-primary btn-sm md:btn-md w-full sm:w-auto" onclick="app.showAddProductForm()">
             <i class="fas fa-plus mr-2"></i>
             Add New Product
           </button>
         </div>
 
         <!-- Add/Edit Product Form -->
-        <div id="product-form-container" class="hidden mb-6">
-          <div class="bg-base-100 rounded-lg shadow-lg p-6">
-            <h5 class="text-xl font-bold mb-4" id="form-title">Add New Product</h5>
-            <form id="product-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div id="product-form-container" class="hidden mb-4 md:mb-6">
+          <div class="bg-base-100 rounded-lg shadow-lg p-4 md:p-6">
+            <h5 class="text-base md:text-xl font-bold mb-3 md:mb-4" id="form-title">Add New Product</h5>
+            <form id="product-form" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <input type="hidden" id="product-id" />
               
               <div class="form-control">
                 <label class="label">
-                  <span class="label-text font-semibold">Product Name *</span>
+                  <span class="label-text font-semibold text-xs md:text-sm">Product Name *</span>
                 </label>
-                <input type="text" id="product-name" class="input input-bordered" required />
+                <input type="text" id="product-name" class="input input-bordered input-sm md:input-md" required />
               </div>
 
               <div class="form-control">
                 <label class="label">
-                  <span class="label-text font-semibold">Category *</span>
+                  <span class="label-text font-semibold text-xs md:text-sm">Category *</span>
                 </label>
-                <select id="product-category" class="select select-bordered" required>
+                <select id="product-category" class="select select-bordered select-sm md:select-md" required>
                   <option value="">Select Category</option>
                   ${this.categories.filter(cat => cat !== 'All').map(cat => `<option value="${cat}">${cat}</option>`).join('')}
                 </select>
@@ -1022,60 +1022,60 @@ class EcommerceApp {
 
               <div class="form-control">
                 <label class="label">
-                  <span class="label-text font-semibold">Price (₨) *</span>
+                  <span class="label-text font-semibold text-xs md:text-sm">Price (₨) *</span>
                 </label>
-                <input type="number" id="product-price" class="input input-bordered" step="0.01" min="0" required />
+                <input type="number" id="product-price" class="input input-bordered input-sm md:input-md" step="0.01" min="0" required />
               </div>
 
               <div class="form-control">
                 <label class="label">
-                  <span class="label-text font-semibold">In Stock</span>
+                  <span class="label-text font-semibold text-xs md:text-sm">In Stock</span>
                 </label>
-                <input type="checkbox" id="product-instock" class="checkbox checkbox-primary" checked />
+                <input type="checkbox" id="product-instock" class="checkbox checkbox-primary checkbox-sm md:checkbox-md" checked />
               </div>
 
               <div class="form-control">
                 <label class="label">
-                  <span class="label-text font-semibold">Promotion (%)</span>
+                  <span class="label-text font-semibold text-xs md:text-sm">Promotion (%)</span>
                 </label>
-                <input type="number" id="product-promotion" class="input input-bordered" step="1" min="0" max="100" placeholder="0" />
+                <input type="number" id="product-promotion" class="input input-bordered input-sm md:input-md" step="1" min="0" max="100" placeholder="0" />
                 <label class="label">
-                  <span class="label-text-alt">Enter discount percentage (0-100). Leave 0 for no promotion.</span>
+                  <span class="label-text-alt text-xs">Enter discount percentage (0-100). Leave 0 for no promotion.</span>
                 </label>
               </div>
 
               <div class="form-control md:col-span-2">
                 <label class="label">
-                  <span class="label-text font-semibold">Description *</span>
+                  <span class="label-text font-semibold text-xs md:text-sm">Description *</span>
                 </label>
-                <textarea id="product-description" class="textarea textarea-bordered h-24" required></textarea>
+                <textarea id="product-description" class="textarea textarea-bordered textarea-sm md:textarea-md h-20 md:h-24" required></textarea>
               </div>
 
               <div class="form-control md:col-span-2">
                 <label class="label">
-                  <span class="label-text font-semibold">Product Image</span>
+                  <span class="label-text font-semibold text-xs md:text-sm">Product Image</span>
                 </label>
-                <div class="tabs tabs-boxed mb-2">
+                <div class="tabs tabs-boxed mb-2 text-xs md:text-sm">
                   <a class="tab tab-active" onclick="app.switchImageInput('url')">Image URL</a>
                   <a class="tab" onclick="app.switchImageInput('file')">Upload Image</a>
                 </div>
                 <div id="image-url-input">
-                  <input type="url" id="product-image-url" class="input input-bordered w-full" placeholder="Enter image URL" />
+                  <input type="url" id="product-image-url" class="input input-bordered input-sm md:input-md w-full" placeholder="Enter image URL" />
                   <label class="label">
-                    <span class="label-text-alt">Enter a URL to an external image</span>
+                    <span class="label-text-alt text-xs">Enter a URL to an external image</span>
                   </label>
                 </div>
                 <div id="image-file-input" class="hidden">
-                  <input type="file" id="product-image" accept="image/*" class="file-input file-input-bordered w-full" />
+                  <input type="file" id="product-image" accept="image/*" class="file-input file-input-bordered file-input-sm md:file-input-md w-full" />
                   <label class="label">
-                    <span class="label-text-alt">Upload an image from your device (will be stored in Firebase Storage)</span>
+                    <span class="label-text-alt text-xs">Upload an image from your device (will be stored in Firebase Storage)</span>
                   </label>
                 </div>
               </div>
 
               <div class="md:col-span-2 flex gap-2 justify-end">
-                <button type="button" class="btn btn-outline" onclick="app.cancelProductForm()">Cancel</button>
-                <button type="submit" class="btn btn-primary">
+                <button type="button" class="btn btn-outline btn-sm md:btn-md" onclick="app.cancelProductForm()">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm md:btn-md">
                   <i class="fas fa-save mr-2"></i>
                   Save Product
                 </button>
@@ -1085,56 +1085,56 @@ class EcommerceApp {
         </div>
 
         <!-- Products List -->
-        <div class="bg-base-100 rounded-lg shadow-lg p-6">
-          <h5 class="text-xl font-bold mb-4">All Products</h5>
+        <div class="bg-base-100 rounded-lg shadow-lg p-4 md:p-6">
+          <h5 class="text-base md:text-xl font-bold mb-3 md:mb-4">All Products</h5>
           <div class="overflow-x-auto">
-            <table class="table table-zebra w-full">
+            <table class="table table-zebra w-full text-xs md:text-sm">
               <thead>
                 <tr>
-                  <th>ID</th>
+                  <th class="hidden md:table-cell">ID</th>
                   <th>Name</th>
-                  <th>Category</th>
+                  <th class="hidden sm:table-cell">Category</th>
                   <th>Price</th>
-                  <th>Promotion</th>
-                  <th>Stock</th>
+                  <th class="hidden md:table-cell">Promotion</th>
+                  <th class="hidden lg:table-cell">Stock</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 ${this.products.map(product => `
                   <tr>
-                    <td>${product.id}</td>
+                    <td class="hidden md:table-cell">${product.id}</td>
                     <td>
-                      <div class="flex items-center gap-3">
+                      <div class="flex items-center gap-2 md:gap-3">
                         <div class="avatar">
-                          <div class="w-12 h-12 rounded">
+                          <div class="w-8 h-8 md:w-12 md:h-12 rounded">
                             <img src="${product.image}" alt="${product.name}" />
                           </div>
                         </div>
-                        <div class="font-semibold">${product.name}</div>
+                        <div class="font-semibold text-xs md:text-sm">${product.name}</div>
                       </div>
                     </td>
-                    <td><span class="badge badge-primary">${product.category}</span></td>
-                    <td class="font-bold">₨${product.price.toFixed(2)}</td>
-                    <td>
+                    <td class="hidden sm:table-cell"><span class="badge badge-primary badge-sm md:badge-md">${product.category}</span></td>
+                    <td class="font-bold text-xs md:text-sm">₨${product.price.toFixed(2)}</td>
+                    <td class="hidden md:table-cell">
                       ${product.promotion > 0 ? 
-                        `<span class="badge badge-error">-${product.promotion}%</span>` : 
-                        '<span class="badge badge-ghost">None</span>'}
+                        `<span class="badge badge-error badge-sm">-${product.promotion}%</span>` : 
+                        '<span class="badge badge-ghost badge-sm">None</span>'}
                     </td>
-                    <td>
+                    <td class="hidden lg:table-cell">
                       ${product.inStock ? 
-                        '<span class="badge badge-success">In Stock</span>' : 
-                        '<span class="badge badge-error">Out of Stock</span>'}
+                        '<span class="badge badge-success badge-sm">In Stock</span>' : 
+                        '<span class="badge badge-error badge-sm">Out</span>'}
                     </td>
                     <td>
-                      <div class="flex gap-2">
-                        <button class="btn btn-sm btn-info" onclick="app.viewProduct('${product.id}')">
+                      <div class="flex gap-1 md:gap-2">
+                        <button class="btn btn-xs md:btn-sm btn-info" onclick="app.viewProduct('${product.id}')" title="View">
                           <i class="fas fa-eye"></i>
                         </button>
-                        <button class="btn btn-sm btn-warning" onclick="app.editProduct('${product.id}')">
+                        <button class="btn btn-xs md:btn-sm btn-warning" onclick="app.editProduct('${product.id}')" title="Edit">
                           <i class="fas fa-edit"></i>
                         </button>
-                        <button class="btn btn-sm btn-error" onclick="app.deleteProduct('${product.id}')">
+                        <button class="btn btn-xs md:btn-sm btn-error" onclick="app.deleteProduct('${product.id}')" title="Delete">
                           <i class="fas fa-trash"></i>
                         </button>
                       </div>
@@ -1149,55 +1149,55 @@ class EcommerceApp {
 
       <!-- Categories Management Tab -->
       <div id="categories-tab" class="dashboard-tab hidden">
-        <div class="mb-6 flex justify-between items-center">
-          <h4 class="text-2xl font-bold">Category Management</h4>
-          <button class="btn btn-primary" onclick="app.showAddCategoryForm()">
+        <div class="mb-4 md:mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <h4 class="text-lg md:text-2xl font-bold">Category Management</h4>
+          <button class="btn btn-primary btn-sm md:btn-md w-full sm:w-auto" onclick="app.showAddCategoryForm()">
             <i class="fas fa-plus mr-2"></i>
             Add New Category
           </button>
         </div>
 
         <!-- Add/Edit Category Form -->
-        <div id="category-form-container" class="hidden mb-6">
-          <div class="bg-base-100 rounded-lg shadow-lg p-6">
-            <h5 class="text-xl font-bold mb-4" id="category-form-title">Add New Category</h5>
-            <form id="category-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div id="category-form-container" class="hidden mb-4 md:mb-6">
+          <div class="bg-base-100 rounded-lg shadow-lg p-4 md:p-6">
+            <h5 class="text-base md:text-xl font-bold mb-3 md:mb-4" id="category-form-title">Add New Category</h5>
+            <form id="category-form" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <input type="hidden" id="category-old-name" />
               
               <div class="form-control">
                 <label class="label">
-                  <span class="label-text font-semibold">Category Name *</span>
+                  <span class="label-text font-semibold text-xs md:text-sm">Category Name *</span>
                 </label>
-                <input type="text" id="category-name" class="input input-bordered" required placeholder="e.g., Featured, New, Black Friday" />
+                <input type="text" id="category-name" class="input input-bordered input-sm md:input-md" required placeholder="e.g., Featured, New, Black Friday" />
               </div>
 
               <div class="form-control">
                 <label class="label">
-                  <span class="label-text font-semibold">Display Color</span>
+                  <span class="label-text font-semibold text-xs md:text-sm">Display Color</span>
                 </label>
                 <div class="flex gap-2">
-                  <input type="color" id="category-color" class="w-16 h-12 border-2 border-base-300 rounded cursor-pointer" value="#3b82f6" />
-                  <input type="text" id="category-color-hex" class="input input-bordered flex-1" placeholder="#3b82f6" value="#3b82f6" />
+                  <input type="color" id="category-color" class="w-12 h-10 md:w-16 md:h-12 border-2 border-base-300 rounded cursor-pointer" value="#3b82f6" />
+                  <input type="text" id="category-color-hex" class="input input-bordered input-sm md:input-md flex-1" placeholder="#3b82f6" value="#3b82f6" />
                 </div>
                 <label class="label">
-                  <span class="label-text-alt">Color for category badges and highlights</span>
+                  <span class="label-text-alt text-xs">Color for category badges and highlights</span>
                 </label>
               </div>
 
               <div class="form-control md:col-span-2">
                 <label class="label">
-                  <span class="label-text font-semibold">Description</span>
+                  <span class="label-text font-semibold text-xs md:text-sm">Description</span>
                 </label>
-                <textarea id="category-description" class="textarea textarea-bordered h-20" placeholder="Optional description for this category"></textarea>
+                <textarea id="category-description" class="textarea textarea-bordered textarea-sm md:textarea-md h-16 md:h-20" placeholder="Optional description for this category"></textarea>
               </div>
 
               <div class="form-control md:col-span-2">
                 <div class="flex gap-2">
-                  <button type="submit" class="btn btn-primary">
+                  <button type="submit" class="btn btn-primary btn-sm md:btn-md">
                     <i class="fas fa-save mr-2"></i>
                     Save Category
                   </button>
-                  <button type="button" class="btn btn-ghost" onclick="app.cancelCategoryForm()">
+                  <button type="button" class="btn btn-ghost btn-sm md:btn-md" onclick="app.cancelCategoryForm()">
                     Cancel
                   </button>
                 </div>
@@ -1216,8 +1216,8 @@ class EcommerceApp {
 
       <!-- Orders Management Tab -->
       <div id="orders-tab" class="dashboard-tab hidden">
-        <div class="mb-6">
-          <h4 class="text-2xl font-bold mb-4">Orders Management</h4>
+        <div class="mb-4 md:mb-6">
+          <h4 class="text-lg md:text-2xl font-bold mb-3 md:mb-4">Orders Management</h4>
           <div id="orders-content">
             <div class="flex justify-center py-12">
               <span class="loading loading-spinner loading-lg"></span>
@@ -1279,60 +1279,60 @@ class EcommerceApp {
 
     ordersContent.innerHTML = `
       <!-- Order Statistics -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-        <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-4">
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4 mb-4 md:mb-6">
+        <div class="stat-card bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-3 md:p-4">
           <div class="text-center">
-            <p class="text-sm opacity-80">Total Orders</p>
-            <h3 class="text-3xl font-bold mt-1">${orderStats.total}</h3>
+            <p class="text-xs md:text-sm opacity-80">Total Orders</p>
+            <h3 class="text-xl md:text-3xl font-bold mt-1">${orderStats.total}</h3>
           </div>
         </div>
-        <div class="stat-card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-4">
+        <div class="stat-card bg-gradient-to-br from-yellow-500 to-yellow-600 text-white rounded-lg shadow-lg p-3 md:p-4">
           <div class="text-center">
-            <p class="text-sm opacity-80">Pending</p>
-            <h3 class="text-3xl font-bold mt-1">${orderStats.pending}</h3>
+            <p class="text-xs md:text-sm opacity-80">Pending</p>
+            <h3 class="text-xl md:text-3xl font-bold mt-1">${orderStats.pending}</h3>
           </div>
         </div>
-        <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow-lg p-4">
+        <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-lg shadow-lg p-3 md:p-4">
           <div class="text-center">
-            <p class="text-sm opacity-80">Processing</p>
-            <h3 class="text-3xl font-bold mt-1">${orderStats.processing}</h3>
+            <p class="text-xs md:text-sm opacity-80">Processing</p>
+            <h3 class="text-xl md:text-3xl font-bold mt-1">${orderStats.processing}</h3>
           </div>
         </div>
-        <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow-lg p-4">
+        <div class="stat-card bg-gradient-to-br from-green-500 to-green-600 text-white rounded-lg shadow-lg p-3 md:p-4">
           <div class="text-center">
-            <p class="text-sm opacity-80">Completed</p>
-            <h3 class="text-3xl font-bold mt-1">${orderStats.completed}</h3>
+            <p class="text-xs md:text-sm opacity-80">Completed</p>
+            <h3 class="text-xl md:text-3xl font-bold mt-1">${orderStats.completed}</h3>
           </div>
         </div>
-        <div class="stat-card bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-lg shadow-lg p-4">
+        <div class="stat-card bg-gradient-to-br from-gray-500 to-gray-600 text-white rounded-lg shadow-lg p-3 md:p-4">
           <div class="text-center">
-            <p class="text-sm opacity-80">Cancelled</p>
-            <h3 class="text-3xl font-bold mt-1">${orderStats.cancelled}</h3>
+            <p class="text-xs md:text-sm opacity-80">Cancelled</p>
+            <h3 class="text-xl md:text-3xl font-bold mt-1">${orderStats.cancelled}</h3>
           </div>
         </div>
       </div>
 
       <!-- Revenue Card -->
-      <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-lg shadow-lg p-4 md:p-6 mb-4 md:mb-6">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm opacity-80">Total Revenue (Completed Orders)</p>
-            <h3 class="text-4xl font-bold mt-2">₨${orderStats.totalRevenue.toFixed(2)}</h3>
+            <p class="text-xs md:text-sm opacity-80">Total Revenue (Completed Orders)</p>
+            <h3 class="text-2xl md:text-4xl font-bold mt-1 md:mt-2">₨${orderStats.totalRevenue.toFixed(2)}</h3>
           </div>
-          <div class="text-6xl opacity-80">
+          <div class="text-4xl md:text-6xl opacity-80">
             <i class="fas fa-money-bill-wave"></i>
           </div>
         </div>
       </div>
 
       <!-- Filters -->
-      <div class="bg-base-100 rounded-lg shadow-lg p-4 mb-6">
-        <div class="flex flex-wrap gap-4 items-center">
-          <div class="form-control">
+      <div class="bg-base-100 rounded-lg shadow-lg p-3 md:p-4 mb-4 md:mb-6">
+        <div class="flex flex-col sm:flex-row gap-3 md:gap-4 items-stretch sm:items-end">
+          <div class="form-control flex-1 sm:flex-initial">
             <label class="label">
-              <span class="label-text font-semibold">Filter by Status</span>
+              <span class="label-text font-semibold text-xs md:text-sm">Filter by Status</span>
             </label>
-            <select id="order-status-filter" class="select select-bordered" onchange="app.filterOrders()">
+            <select id="order-status-filter" class="select select-bordered select-sm md:select-md" onchange="app.filterOrders()">
               <option value="all">All Orders</option>
               <option value="pending">Pending</option>
               <option value="processing">Processing</option>
@@ -1342,13 +1342,13 @@ class EcommerceApp {
           </div>
           <div class="form-control flex-1">
             <label class="label">
-              <span class="label-text font-semibold">Search</span>
+              <span class="label-text font-semibold text-xs md:text-sm">Search</span>
             </label>
             <input 
               type="text" 
               id="order-search" 
               placeholder="Search by customer name, phone, or order ID..." 
-              class="input input-bordered w-full"
+              class="input input-bordered input-sm md:input-md w-full"
               oninput="app.filterOrders()" 
             />
           </div>
@@ -1356,18 +1356,18 @@ class EcommerceApp {
       </div>
 
       <!-- Orders Table -->
-      <div class="bg-base-100 rounded-lg shadow-lg p-6">
-        <h5 class="text-xl font-bold mb-4">All Orders</h5>
+      <div class="bg-base-100 rounded-lg shadow-lg p-3 md:p-6">
+        <h5 class="text-base md:text-xl font-bold mb-3 md:mb-4">All Orders</h5>
         <div class="overflow-x-auto">
-          <table class="table table-zebra w-full">
+          <table class="table table-zebra w-full text-xs md:text-sm">
             <thead>
               <tr>
-                <th>Order ID</th>
+                <th class="hidden sm:table-cell">Order ID</th>
                 <th>Customer</th>
-                <th>Items</th>
+                <th class="hidden md:table-cell">Items</th>
                 <th>Total</th>
                 <th>Status</th>
-                <th>Date</th>
+                <th class="hidden lg:table-cell">Date</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -1396,31 +1396,31 @@ class EcommerceApp {
 
       return `
         <tr data-order-id="${order.id}" data-status="${order.status}" data-customer="${order.customerName?.toLowerCase() || ''}" data-phone="${order.customerPhone || ''}">
-          <td class="font-mono text-sm">${order.orderId?.substring(0, 8) || order.id?.substring(0, 8)}...</td>
+          <td class="font-mono text-xs hidden sm:table-cell">${order.orderId?.substring(0, 8) || order.id?.substring(0, 8)}...</td>
           <td>
             <div>
-              <div class="font-semibold">${order.customerName || 'N/A'}</div>
-              <div class="text-sm text-gray-500">${order.customerPhone || ''}</div>
+              <div class="font-semibold text-xs md:text-sm">${order.customerName || 'N/A'}</div>
+              <div class="text-xs text-gray-500">${order.customerPhone || ''}</div>
             </div>
           </td>
-          <td class="text-center">
-            <span class="badge badge-primary">${itemCount}</span>
+          <td class="text-center hidden md:table-cell">
+            <span class="badge badge-primary badge-sm">${itemCount}</span>
           </td>
-          <td class="font-bold text-primary">₨${(order.totalAmount || 0).toFixed(2)}</td>
+          <td class="font-bold text-primary text-xs md:text-sm">₨${(order.totalAmount || 0).toFixed(2)}</td>
           <td>
-            <span class="badge ${statusBadgeClass} badge-lg">${order.status || 'pending'}</span>
+            <span class="badge ${statusBadgeClass} badge-sm md:badge-md">${order.status || 'pending'}</span>
           </td>
-          <td class="text-sm">${orderDate}</td>
+          <td class="text-xs hidden lg:table-cell">${orderDate}</td>
           <td>
-            <div class="flex gap-2">
-              <button class="btn btn-sm btn-info" onclick="app.viewOrderDetails('${order.id}')" title="View Details">
+            <div class="flex gap-1">
+              <button class="btn btn-xs md:btn-sm btn-info" onclick="app.viewOrderDetails('${order.id}')" title="View Details">
                 <i class="fas fa-eye"></i>
               </button>
               <div class="dropdown dropdown-end">
-                <label tabindex="0" class="btn btn-sm btn-primary" title="Update Status">
+                <label tabindex="0" class="btn btn-xs md:btn-sm btn-primary" title="Update Status">
                   <i class="fas fa-edit"></i>
                 </label>
-                <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-50">
+                <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 z-50 text-xs md:text-sm">
                   <li><a onclick="app.updateOrderStatus('${order.id}', 'pending')">
                     <i class="fas fa-clock text-warning"></i> Pending
                   </a></li>
