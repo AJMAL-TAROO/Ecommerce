@@ -408,13 +408,24 @@ class FirebaseService {
       // Create upload task
       const uploadTask = storageRef.put(file);
       
-      // Add timeout to prevent indefinite hanging (30 seconds)
+      // Add progress tracking
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload progress:', progress.toFixed(1) + '%');
+        },
+        (error) => {
+          console.error('Upload error during progress:', error.code, error.message);
+        }
+      );
+      
+      // Add timeout to prevent indefinite hanging (90 seconds - increased from 30s)
       const uploadPromise = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           uploadTask.cancel();
           console.error('Upload timeout: Payment screenshot upload took too long');
           reject(new Error('Upload timeout: Payment screenshot upload took too long'));
-        }, 30000);
+        }, 90000);
         
         uploadTask.then(snapshot => {
           clearTimeout(timeout);
