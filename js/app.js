@@ -528,6 +528,92 @@ class EcommerceApp {
     if (form) form.reset();
   }
 
+  // Compress image before upload to reduce upload time
+  async compressImage(file, maxSizeMB = 1, maxWidthOrHeight = 1920) {
+    return new Promise((resolve, reject) => {
+      // If file is already small enough, return as is
+      if (file.size <= maxSizeMB * 1024 * 1024 * 0.8) {
+        console.log('Image is already small enough, no compression needed');
+        resolve(file);
+        return;
+      }
+
+      console.log('Compressing image:', file.name, 'Original size:', (file.size / 1024 / 1024).toFixed(2), 'MB');
+
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        
+        img.onload = () => {
+          // Calculate new dimensions
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height) {
+            if (width > maxWidthOrHeight) {
+              height *= maxWidthOrHeight / width;
+              width = maxWidthOrHeight;
+            }
+          } else {
+            if (height > maxWidthOrHeight) {
+              width *= maxWidthOrHeight / height;
+              height = maxWidthOrHeight;
+            }
+          }
+          
+          // Create canvas and compress
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // Try different quality levels to get under target size
+          let quality = 0.8;
+          const tryCompress = () => {
+            canvas.toBlob((blob) => {
+              if (!blob) {
+                reject(new Error('Failed to compress image'));
+                return;
+              }
+              
+              const compressedSize = blob.size / 1024 / 1024;
+              console.log('Compressed size:', compressedSize.toFixed(2), 'MB at quality:', quality);
+              
+              // If still too large and quality can be reduced, try again
+              if (compressedSize > maxSizeMB && quality > 0.3) {
+                quality -= 0.1;
+                tryCompress();
+              } else {
+                // Create a new File object from the blob
+                const compressedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now()
+                });
+                console.log('Final compressed size:', (compressedFile.size / 1024 / 1024).toFixed(2), 'MB');
+                resolve(compressedFile);
+              }
+            }, 'image/jpeg', quality);
+          };
+          
+          tryCompress();
+        };
+        
+        img.onerror = () => {
+          reject(new Error('Failed to load image'));
+        };
+      };
+      
+      reader.onerror = () => {
+        reject(new Error('Failed to read file'));
+      };
+    });
+  }
+
   async handleCheckoutSubmit(e) {
     e.preventDefault();
     
@@ -543,6 +629,19 @@ class EcommerceApp {
       return;
     }
     
+    // Validate file is an image
+    if (!screenshot.type.startsWith('image/')) {
+      this.showNotification('Please upload a valid image file', 'error');
+      return;
+    }
+    
+    // Warn if file is very large (over 10MB)
+    const maxFileSize = 10 * 1024 * 1024; // 10MB
+    if (screenshot.size > maxFileSize) {
+      this.showNotification('Image is too large (max 10MB). Please choose a smaller image.', 'error');
+      return;
+    }
+    
     // Get submit button and disable it to prevent multiple submissions
     const submitBtn = e.target.querySelector('button[type="submit"]');
     const originalBtnContent = submitBtn.innerHTML;
@@ -553,9 +652,24 @@ class EcommerceApp {
       // Show loading notification
       this.showNotification('Processing your order...', 'info');
       
+      // Compress image if needed (reduces upload time significantly)
+      let processedScreenshot = screenshot;
+      if (screenshot.size > 500 * 1024) { // Compress if larger than 500KB
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Optimizing image...';
+        try {
+          processedScreenshot = await this.compressImage(screenshot, 1, 1920);
+          console.log('Image compressed from', (screenshot.size / 1024).toFixed(0), 'KB to', (processedScreenshot.size / 1024).toFixed(0), 'KB');
+        } catch (compressionError) {
+          console.warn('Image compression failed, using original:', compressionError);
+          processedScreenshot = screenshot;
+        }
+      }
+      
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+      
       // Prepare order data
       const orderData = {
-        screenshot: screenshot,
+        screenshot: processedScreenshot,
         name: name,
         phone: phone,
         address: address,
@@ -566,12 +680,12 @@ class EcommerceApp {
         }, 0)
       };
 
-      // Save order to Firebase with overall timeout (45 seconds)
+      // Save order to Firebase with overall timeout (120 seconds - increased from 45s)
       let result = null;
       if (this.firebaseInitialized) {
         const savePromise = firebaseService.saveOrder(orderData);
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Order submission timeout. Please check your internet connection and try again.')), 45000);
+          setTimeout(() => reject(new Error('Order submission timeout. Please check your internet connection and try again.')), 120000);
         });
         result = await Promise.race([savePromise, timeoutPromise]);
       } else {
