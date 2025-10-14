@@ -614,6 +614,35 @@ class EcommerceApp {
     });
   }
 
+  // Convert Firebase Storage URL to Blob URL to bypass CSP restrictions
+  async convertToBlobUrl(imageUrl) {
+    try {
+      // If it's already a blob or data URL, return as is
+      if (imageUrl.startsWith('blob:') || imageUrl.startsWith('data:')) {
+        return imageUrl;
+      }
+      
+      // Fetch the image from Firebase Storage
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.status}`);
+      }
+      
+      // Convert to blob
+      const blob = await response.blob();
+      
+      // Create blob URL
+      const blobUrl = URL.createObjectURL(blob);
+      
+      console.log('Converted Firebase URL to blob URL for CSP compatibility');
+      return blobUrl;
+    } catch (error) {
+      console.error('Failed to convert image to blob URL:', error);
+      // Return original URL as fallback
+      return imageUrl;
+    }
+  }
+
   async handleCheckoutSubmit(e) {
     e.preventDefault();
     
@@ -1607,6 +1636,12 @@ class EcommerceApp {
         'cancelled': 'badge-error'
       }[order.status] || 'badge-ghost';
 
+      // Convert Firebase Storage URL to blob URL for CSP compatibility
+      let screenshotUrl = order.paymentScreenshot;
+      if (screenshotUrl && screenshotUrl.includes('firebasestorage.googleapis.com')) {
+        screenshotUrl = await this.convertToBlobUrl(screenshotUrl);
+      }
+
       const modal = document.getElementById('product-modal');
       const modalContent = document.getElementById('modal-content');
       
@@ -1709,7 +1744,7 @@ class EcommerceApp {
               Payment Proof
             </h4>
             <div class="flex justify-center">
-              <img src="${order.paymentScreenshot}" alt="Payment Screenshot" class="max-w-full max-h-96 rounded-lg shadow-lg" />
+              <img src="${screenshotUrl}" alt="Payment Screenshot" class="max-w-full max-h-96 rounded-lg shadow-lg" />
             </div>
             <div class="mt-3 text-center">
               <a href="${order.paymentScreenshot}" target="_blank" class="btn btn-sm btn-primary">
