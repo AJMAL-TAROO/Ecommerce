@@ -19,6 +19,24 @@ A fully functional e-commerce platform built with HTML, CSS, JavaScript, Tailwin
 - 💳 **Order Management**: Payment details and order history stored in Firebase
 - 🔥 **Firebase Integration**: Real-time database and cloud storage
 
+## Recent Updates
+
+### Screenshot Upload Fix (Latest)
+Fixed a critical bug where payment screenshots were not displaying in order details view.
+
+**What Was Fixed:**
+- 🐛 **Missing Method**: Added `convertToBlobUrl()` method that was referenced but not implemented
+- 📊 **Enhanced Logging**: Better upload tracking for debugging screenshot upload issues
+- 💬 **User Feedback**: Added notification during screenshot upload process
+- ✅ **CSP Compatibility**: Proper blob URL conversion for Firebase Storage images
+
+**Impact:**
+- Order details now correctly display payment screenshots
+- Better diagnostics for upload failures
+- Improved user experience during checkout
+
+See [SCREENSHOT_UPLOAD_FIX.md](SCREENSHOT_UPLOAD_FIX.md) for technical details.
+
 ## Technologies Used
 
 - **HTML5**: Semantic markup structure
