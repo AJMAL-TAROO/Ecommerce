@@ -582,6 +582,11 @@ class EcommerceApp {
       // Clear cart and close modals
       this.cart = [];
       this.saveCart();
+      
+      // Re-enable submit button before closing modal
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = originalBtnContent;
+      
       this.closeCheckoutModal();
       this.toggleCart();
       
@@ -1602,7 +1607,10 @@ class EcommerceApp {
         ` : `
           <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle mr-2"></i>
-            <span>No payment screenshot available for this order.</span>
+            <div>
+              <div>No payment screenshot available for this order.</div>
+              ${order.screenshotUploadError ? `<div class="text-sm mt-1">Error: ${order.screenshotUploadError}</div>` : ''}
+            </div>
           </div>
         `}
 

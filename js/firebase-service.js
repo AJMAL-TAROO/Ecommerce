@@ -316,18 +316,24 @@ class FirebaseService {
     try {
       const orderRef = this.database.ref('orders').push();
       const orderId = orderRef.key;
+      
+      console.log('Saving order:', orderId);
 
       // Upload payment screenshot to Firebase Storage
       let screenshotUrl = null;
       let uploadError = null;
       if (orderData.screenshot) {
+        console.log('Attempting to upload payment screenshot...');
         try {
           screenshotUrl = await this.uploadPaymentScreenshot(orderData.screenshot);
+          console.log('Payment screenshot uploaded successfully:', screenshotUrl);
         } catch (uploadErr) {
           console.error('Failed to upload payment screenshot, saving order without it:', uploadErr);
           uploadError = uploadErr.message || 'Screenshot upload failed';
           // Continue to save order even if screenshot upload fails
         }
+      } else {
+        console.warn('No screenshot provided for order');
       }
 
       const order = {
@@ -344,6 +350,7 @@ class FirebaseService {
       };
 
       await orderRef.set(order);
+      console.log('Order saved successfully to database');
       
       return { id: orderId, ...order, uploadError };
     } catch (error) {
@@ -390,9 +397,13 @@ class FirebaseService {
   // Upload payment screenshot
   async uploadPaymentScreenshot(file) {
     try {
+      console.log('Starting payment screenshot upload:', file.name, 'Size:', file.size);
+      
       const timestamp = Date.now();
       const fileName = `payments/${timestamp}_${file.name}`;
       const storageRef = this.storage.ref(fileName);
+      
+      console.log('Storage reference created:', fileName);
       
       // Create upload task
       const uploadTask = storageRef.put(file);
@@ -401,14 +412,17 @@ class FirebaseService {
       const uploadPromise = new Promise((resolve, reject) => {
         const timeout = setTimeout(() => {
           uploadTask.cancel();
+          console.error('Upload timeout: Payment screenshot upload took too long');
           reject(new Error('Upload timeout: Payment screenshot upload took too long'));
         }, 30000);
         
         uploadTask.then(snapshot => {
           clearTimeout(timeout);
+          console.log('Upload successful:', snapshot.metadata.fullPath);
           resolve(snapshot);
         }).catch(error => {
           clearTimeout(timeout);
+          console.error('Upload failed:', error.code, error.message);
           reject(error);
         });
       });
@@ -417,11 +431,25 @@ class FirebaseService {
       
       // Get download URL
       const downloadURL = await snapshot.ref.getDownloadURL();
+      console.log('Download URL obtained:', downloadURL);
       
       return downloadURL;
     } catch (error) {
-      console.error('Error uploading payment screenshot:', error);
-      throw error;
+      console.error('Error uploading payment screenshot:', error.code, error.message);
+      // Provide more specific error message
+      let errorMessage = 'Screenshot upload failed';
+      if (error.code === 'storage/unauthorized') {
+        errorMessage = 'Screenshot upload failed: Permission denied. Please check Firebase Storage rules.';
+      } else if (error.code === 'storage/canceled') {
+        errorMessage = 'Screenshot upload was canceled';
+      } else if (error.code === 'storage/unknown') {
+        errorMessage = 'Screenshot upload failed: Unknown error occurred';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      const enhancedError = new Error(errorMessage);
+      enhancedError.originalError = error;
+      throw enhancedError;
     }
   }
 
