@@ -555,6 +555,9 @@ class EcommerceApp {
       // Calculate total
       const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
+      // Show uploading notification
+      this.showNotification('Uploading payment screenshot...', 'info');
+
       // Prepare order data
       const orderData = {
         screenshot: screenshot,
@@ -1622,6 +1625,18 @@ class EcommerceApp {
     } catch (error) {
       console.error('Error viewing order details:', error);
       this.showNotification('Failed to load order details', 'error');
+    }
+  }
+
+  async convertToBlobUrl(firebaseUrl) {
+    try {
+      const response = await fetch(firebaseUrl);
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Error converting to blob URL:', error);
+      // Return original URL if conversion fails
+      return firebaseUrl;
     }
   }
 

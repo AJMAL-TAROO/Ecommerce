@@ -321,7 +321,13 @@ class FirebaseService {
       let screenshotUrl = null;
       if (orderData.screenshot) {
         try {
+          console.log('Uploading payment screenshot...', {
+            fileName: orderData.screenshot.name,
+            fileSize: orderData.screenshot.size,
+            fileType: orderData.screenshot.type
+          });
           screenshotUrl = await this.uploadPaymentScreenshot(orderData.screenshot);
+          console.log('Payment screenshot uploaded successfully:', screenshotUrl);
         } catch (uploadErr) {
           console.error('Failed to upload payment screenshot:', uploadErr);
           // Continue to save order even if screenshot upload fails
@@ -341,6 +347,7 @@ class FirebaseService {
       };
 
       await orderRef.set(order);
+      console.log('Order saved successfully with ID:', orderId, 'Screenshot URL:', screenshotUrl);
       
       return { id: orderId, ...order };
     } catch (error) {
@@ -391,6 +398,8 @@ class FirebaseService {
       const fileName = `payments/${timestamp}_${file.name}`;
       const storageRef = this.storage.ref(fileName);
       
+      console.log('Starting upload to path:', fileName);
+      
       // Create upload task with timeout
       const uploadTask = storageRef.put(file);
       
@@ -403,6 +412,7 @@ class FirebaseService {
         
         uploadTask.then(snapshot => {
           clearTimeout(timeout);
+          console.log('Upload completed successfully');
           resolve(snapshot);
         }).catch(error => {
           clearTimeout(timeout);
@@ -414,6 +424,7 @@ class FirebaseService {
       
       // Get download URL
       const downloadURL = await snapshot.ref.getDownloadURL();
+      console.log('Download URL obtained:', downloadURL);
       
       return downloadURL;
     } catch (error) {
