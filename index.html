@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#570df8">
-    <link rel="manifest" href="./manifest.json">
-    <title>DodoShop - Your Premium E-commerce Store</title>
+    <title>ShopHub - Your Premium E-commerce Store</title>
     
     <!-- TailwindCSS and DaisyUI -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
@@ -13,12 +11,6 @@
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
     
     <style>
         .line-clamp-2 {
@@ -49,43 +41,6 @@
         #cart-drawer {
             transition: transform 0.3s ease-in-out;
         }
-        
-        .stat-card {
-            transition: transform 0.2s ease-in-out;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-4px);
-        }
-        
-        .category-bar {
-            transition: width 0.5s ease-in-out;
-        }
-        
-        /* Mobile-specific improvements for admin dashboard */
-        @media (max-width: 768px) {
-            .modal-box {
-                max-height: 90vh;
-                overflow-y: auto;
-            }
-            
-            /* Better table scrolling on mobile */
-            .overflow-x-auto {
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            /* Ensure tabs wrap better */
-            .tabs {
-                overflow-x: auto;
-                flex-wrap: nowrap;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            .tab {
-                white-space: nowrap;
-                flex-shrink: 0;
-            }
-        }
     </style>
 </head>
 <body class="bg-base-200">
@@ -93,9 +48,9 @@
     <div class="navbar bg-base-100 shadow-lg sticky top-0 z-40">
         <div class="container mx-auto">
             <div class="flex-1">
-                <a href="javascript:void(0)" id="beverlyshop-logo" class="btn btn-ghost normal-case text-xl">
+                <a href="/" class="btn btn-ghost normal-case text-xl">
                     <i class="fas fa-shopping-bag mr-2"></i>
-                    DodoShop
+                    ShopHub
                 </a>
             </div>
             <div class="flex-none gap-2 flex items-center">
@@ -116,8 +71,8 @@
     <div class="hero min-h-[40vh] bg-gradient-to-r from-primary to-secondary text-primary-content">
         <div class="hero-content text-center">
             <div class="max-w-md">
-                <h1 class="mb-5 text-5xl font-bold">Welcome to DodoShop</h1>
-                <p class="mb-5">Discover amazing products at unbeatable prices. Shop now and enjoy free shipping on orders over ₨50!</p>
+                <h1 class="mb-5 text-5xl font-bold">Welcome to ShopHub</h1>
+                <p class="mb-5">Discover amazing products at unbeatable prices. Shop now and enjoy free shipping on orders over $50!</p>
                 <button class="btn btn-accent" onclick="document.getElementById('products').scrollIntoView({behavior: 'smooth'})">
                     Shop Now
                 </button>
@@ -143,21 +98,6 @@
                 <div class="col-span-full flex justify-center py-12">
                     <span class="loading loading-spinner loading-lg"></span>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Admin Dashboard Modal -->
-    <div id="admin-dashboard-modal" class="modal">
-        <div class="modal-box w-11/12 max-w-7xl p-4 md:p-6">
-            <div class="flex justify-between items-center mb-4 md:mb-6">
-                <h3 class="font-bold text-xl md:text-3xl">Admin Dashboard</h3>
-                <button class="btn btn-ghost btn-circle btn-sm md:btn-md" onclick="app.closeAdminDashboard()">
-                    <i class="fas fa-times text-lg md:text-xl"></i>
-                </button>
-            </div>
-            <div id="dashboard-content">
-                <!-- Dashboard content will be loaded here -->
             </div>
         </div>
     </div>
@@ -223,7 +163,7 @@
                     </div>
                     <div class="flex justify-between text-lg">
                         <span class="font-bold">Total Amount:</span>
-                        <span id="checkout-total" class="font-bold text-primary">₨0.00</span>
+                        <span id="checkout-total" class="font-bold text-primary">$0.00</span>
                     </div>
                 </div>
 
@@ -256,41 +196,13 @@
             <div class="border-t pt-4">
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-xl font-bold">Total:</span>
-                    <span id="cart-total" class="text-2xl font-bold text-primary">₨0.00</span>
+                    <span id="cart-total" class="text-2xl font-bold text-primary">$0.00</span>
                 </div>
                 <button class="btn btn-primary btn-block btn-lg" onclick="app.checkout()">
                     <i class="fas fa-credit-card mr-2"></i>
                     Checkout
                 </button>
             </div>
-        </div>
-    </div>
-
-    <!-- Admin Login Modal -->
-    <div id="admin-login-modal" class="modal">
-        <div class="modal-box">
-            <h3 class="font-bold text-2xl mb-4">Admin Login</h3>
-            <form id="admin-login-form" class="space-y-4">
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text font-semibold">Username</span>
-                    </label>
-                    <input type="text" id="admin-username" placeholder="Enter username" class="input input-bordered" required />
-                </div>
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text font-semibold">Password</span>
-                    </label>
-                    <input type="password" id="admin-password" placeholder="Enter password" class="input input-bordered" required />
-                </div>
-                <div class="modal-action">
-                    <button type="button" class="btn btn-outline" onclick="app.closeAdminLogin()">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-sign-in-alt mr-2"></i>
-                        Login
-                    </button>
-                </div>
-            </form>
         </div>
     </div>
 
@@ -310,13 +222,11 @@
             </div>
         </div> 
         <div>
-            <p>Copyright © 2024 - DodoShop E-commerce Platform</p>
+            <p>Copyright © 2024 - ShopHub E-commerce Platform</p>
         </div>
     </footer>
 
     <!-- JavaScript -->
-    <script src="./js/firebase-config.js"></script>
-    <script src="./js/firebase-service.js"></script>
     <script src="./js/app.js"></script>
 </body>
 </html>
