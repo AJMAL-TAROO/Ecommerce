@@ -1488,15 +1488,7 @@ class EcommerceApp {
       // Convert Firebase Storage URL to blob URL for CSP compatibility
       let screenshotUrl = order.paymentScreenshot;
       if (screenshotUrl && screenshotUrl.includes('firebasestorage.googleapis.com')) {
-        try {
-          // Use blob URL for better CSP compatibility
-          if (typeof this.convertToBlobUrl === 'function') {
-            screenshotUrl = await this.convertToBlobUrl(screenshotUrl);
-          }
-        } catch (conversionError) {
-          console.warn('Could not convert to blob URL, using original:', conversionError);
-          // Keep using the original screenshotUrl
-        }
+        screenshotUrl = await this.convertToBlobUrl(screenshotUrl);
       }
 
       const modal = document.getElementById('product-modal');
