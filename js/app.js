@@ -528,103 +528,11 @@ class EcommerceApp {
     if (form) form.reset();
   }
 
-  async compressImage(file) {
-    // Skip compression for small files (< 800KB)
-    if (file.size < 800 * 1024) {
-      console.log('Image is small enough, skipping compression');
-      return file;
-    }
-
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        const img = new Image();
-        
-        img.onload = () => {
-          try {
-            // Calculate new dimensions (max 1920px)
-            let width = img.width;
-            let height = img.height;
-            const maxDimension = 1920;
-            
-            if (width > maxDimension || height > maxDimension) {
-              if (width > height) {
-                height = (height / width) * maxDimension;
-                width = maxDimension;
-              } else {
-                width = (width / height) * maxDimension;
-                height = maxDimension;
-              }
-            }
-            
-            // Create canvas and compress
-            const canvas = document.createElement('canvas');
-            canvas.width = width;
-            canvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, width, height);
-            
-            // Try different quality levels to achieve target size (~1MB)
-            const targetSize = 1024 * 1024; // 1MB
-            let quality = 0.8;
-            
-            const tryCompress = () => {
-              canvas.toBlob((blob) => {
-                if (!blob) {
-                  console.warn('Compression failed, using original file');
-                  resolve(file);
-                  return;
-                }
-                
-                console.log(`Compressed with quality ${quality}: ${(blob.size / 1024).toFixed(0)}KB`);
-                
-                // If still too large and can reduce quality further, try again
-                if (blob.size > targetSize && quality > 0.3) {
-                  quality -= 0.1;
-                  tryCompress();
-                } else {
-                  // Create new file from blob
-                  const compressedFile = new File([blob], file.name, {
-                    type: 'image/jpeg',
-                    lastModified: Date.now()
-                  });
-                  
-                  console.log(`Compression complete: ${(file.size / 1024).toFixed(0)}KB → ${(compressedFile.size / 1024).toFixed(0)}KB`);
-                  resolve(compressedFile);
-                }
-              }, 'image/jpeg', quality);
-            };
-            
-            tryCompress();
-          } catch (error) {
-            console.error('Error during compression:', error);
-            resolve(file); // Fallback to original
-          }
-        };
-        
-        img.onerror = () => {
-          console.error('Error loading image for compression');
-          resolve(file); // Fallback to original
-        };
-        
-        img.src = e.target.result;
-      };
-      
-      reader.onerror = () => {
-        console.error('Error reading file for compression');
-        resolve(file); // Fallback to original
-      };
-      
-      reader.readAsDataURL(file);
-    });
-  }
-
   async handleCheckoutSubmit(e) {
     e.preventDefault();
     
     // Get form values
-    let screenshot = document.getElementById('payment-screenshot').files[0];
+    const screenshot = document.getElementById('payment-screenshot').files[0];
     const name = document.getElementById('customer-name').value.trim();
     const phone = document.getElementById('customer-phone').value.trim();
     const address = document.getElementById('customer-address').value.trim();
@@ -632,19 +540,6 @@ class EcommerceApp {
     // Validate all fields are filled
     if (!screenshot || !name || !phone || !address) {
       this.showNotification('Please fill in all required fields', 'error');
-      return;
-    }
-
-    // Validate file is an image
-    if (!screenshot.type.startsWith('image/')) {
-      this.showNotification('Please upload a valid image file', 'error');
-      return;
-    }
-
-    // Check file size limit (10MB max)
-    const maxFileSize = 10 * 1024 * 1024; // 10MB
-    if (screenshot.size > maxFileSize) {
-      this.showNotification('Image is too large (max 10MB). Please choose a smaller image.', 'error');
       return;
     }
 
@@ -657,14 +552,6 @@ class EcommerceApp {
     submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Processing...';
 
     try {
-      // Show compression notification if file is large
-      if (screenshot.size > 800 * 1024) {
-        this.showNotification('Compressing image for faster upload...', 'info');
-      }
-
-      // Compress image if needed
-      screenshot = await this.compressImage(screenshot);
-
       // Calculate total
       const total = this.cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
@@ -678,18 +565,9 @@ class EcommerceApp {
         total: total
       };
 
-      console.log('Submitting order:', {
-        name,
-        phone,
-        address,
-        items: this.cart.length,
-        total: total,
-        screenshotSize: (screenshot.size / 1024).toFixed(0) + 'KB'
-      });
-
       // Save order to Firebase with timeout
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Order submission timeout. Please check your internet connection and try again.')), 120000); // 120 seconds
+        setTimeout(() => reject(new Error('Order submission timeout')), 45000); // 45 seconds
       });
 
       const result = await Promise.race([
@@ -697,25 +575,14 @@ class EcommerceApp {
         timeoutPromise
       ]);
 
-      console.log('Order saved successfully:', result.id);
-
       // Clear cart and close modals
       this.cart = [];
       this.saveCart();
-
-      // Re-enable submit button before closing modal
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalBtnContent;
-
       this.closeCheckoutModal();
       this.toggleCart();
 
-      // Show appropriate success message
-      if (result && result.uploadError) {
-        this.showNotification('Order placed successfully! Note: Payment screenshot upload failed - please contact us with your payment proof.', 'warning');
-      } else {
-        this.showNotification('Order placed successfully! We will contact you shortly for delivery.', 'success');
-      }
+      // Show success message
+      this.showNotification('Order placed successfully! We will contact you shortly for delivery.', 'success');
     } catch (error) {
       console.error('Error submitting order:', error);
       
@@ -723,7 +590,7 @@ class EcommerceApp {
       submitBtn.disabled = false;
       submitBtn.innerHTML = originalBtnContent;
       
-      this.showNotification(error.message || 'Error processing order. Please try again.', 'error');
+      this.showNotification('Error processing order. Please try again.', 'error');
     }
   }
 
@@ -1735,10 +1602,7 @@ class EcommerceApp {
         ` : `
           <div class="alert alert-warning">
             <i class="fas fa-exclamation-triangle mr-2"></i>
-            <div>
-              <div>No payment screenshot available for this order.</div>
-              ${order.screenshotUploadError ? `<div class="text-sm mt-1">Error: ${order.screenshotUploadError}</div>` : ''}
-            </div>
+            No payment screenshot available for this order.
           </div>
         `}
 
