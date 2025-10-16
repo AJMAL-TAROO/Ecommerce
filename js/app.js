@@ -1432,6 +1432,9 @@ class EcommerceApp {
                   </a></li>
                 </ul>
               </div>
+              <button class="btn btn-xs md:btn-sm btn-error" onclick="app.deleteOrder('${order.id}')" title="Delete Order">
+                <i class="fas fa-trash"></i>
+              </button>
             </div>
           </td>
         </tr>
@@ -1650,6 +1653,36 @@ class EcommerceApp {
     } catch (error) {
       console.error('Error updating order status:', error);
       this.showNotification('Failed to update order status', 'error');
+    }
+  }
+
+  async deleteOrder(orderId) {
+    const order = this.allOrders?.find(o => o.id === orderId);
+    if (!order) return;
+    
+    const customerName = order.customerName || 'Unknown Customer';
+    if (confirm(`Are you sure you want to delete the order from "${customerName}"?\n\nOrder ID: ${order.orderId || order.id}\nAmount: ₨${(order.totalAmount || 0).toFixed(2)}\n\nThis action cannot be undone.`)) {
+      try {
+        this.showNotification('Deleting order...', 'info');
+        
+        if (this.firebaseInitialized) {
+          await firebaseService.deleteOrder(orderId);
+        } else {
+          // Fallback for local deletion
+          this.allOrders = this.allOrders.filter(o => o.id !== orderId);
+        }
+        
+        this.showNotification('Order deleted successfully!', 'success');
+        
+        // Reload orders from Firebase
+        await this.loadOrders();
+        
+        // Update dashboard stats
+        this.renderDashboard();
+      } catch (error) {
+        console.error('Error deleting order:', error);
+        this.showNotification('Error deleting order. Please try again.', 'error');
+      }
     }
   }
 

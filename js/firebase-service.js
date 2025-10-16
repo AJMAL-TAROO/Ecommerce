@@ -391,6 +391,40 @@ class FirebaseService {
     }
   }
 
+  // Delete order
+  async deleteOrder(orderId) {
+    try {
+      // Get order to check if it has a payment screenshot
+      const snapshot = await this.database.ref(`orders/${orderId}`).once('value');
+      const order = snapshot.val();
+      
+      // Delete payment screenshot from storage if it exists
+      if (order && order.paymentScreenshot && order.paymentScreenshot.includes('firebase')) {
+        await this.deletePaymentScreenshot(order.paymentScreenshot);
+      }
+
+      // Delete order from database
+      await this.database.ref(`orders/${orderId}`).remove();
+      
+      return true;
+    } catch (error) {
+      console.error('Error deleting order:', error);
+      throw error;
+    }
+  }
+
+  // Delete payment screenshot from storage
+  async deletePaymentScreenshot(screenshotUrl) {
+    try {
+      const storageRef = this.storage.refFromURL(screenshotUrl);
+      await storageRef.delete();
+      return true;
+    } catch (error) {
+      console.error('Error deleting payment screenshot:', error);
+      throw error;
+    }
+  }
+
   // Upload payment screenshot
   async uploadPaymentScreenshot(file) {
     try {
